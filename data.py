@@ -1,3 +1,6 @@
+from dateutil import parser as date_parser
+
+
 class FrozenClass(object):
     __isfrozen = False
 
@@ -40,10 +43,7 @@ class Sample(FrozenClass):
 
         self.export_name = None
         self.exports = None
-        self.export_table_timestamp = None
         self.imports = None
-        self.resource_timestamp = None
-        self.certificate_signing_timestamp = None
 
         self.strings_count_of_length_at_least_10 = None
         self.strings_count = None
@@ -128,6 +128,122 @@ class SampleImport(FrozenClass):
         self._freeze()
 
 
+class SampleFactory(object):
+    @staticmethod
+    def create_export(address, name, ordinal):
+        export = SampleExport()
+        export.address = address
+        export.name = name
+        export.ordinal = ordinal
+        return export
+
+    @staticmethod
+    def create_import(dll_name, address, name):
+        sample_import = SampleImport()
+        sample_import.dll_name = dll_name
+        sample_import.address = address
+        sample_import.name = name
+        return sample_import
+
+    @staticmethod
+    def create_section(hash_sha256, name, virtual_address, virtual_size, raw_size, entropy, ssdeep):
+        section = SampleSection()
+        section.hash_sha256 = hash_sha256
+        section.name = name
+        section.virtual_address = virtual_address
+        section.virtual_size = virtual_size
+        section.raw_size = raw_size
+        section.entropy = entropy
+        section.ssdeep = ssdeep
+        return section
+
+    @staticmethod
+    def create_resource(
+            hash_sha256, offset, size, actual_size, ssdeep, entropy, type_id, type_str, name_id, name_str, language_id,
+            language_str
+    ):
+        resource = SampleResource()
+        resource.hash_sha256 = hash_sha256
+        resource.offset = offset
+        resource.size = size
+        resource.actual_size = actual_size
+        resource.ssdeep = ssdeep
+        resource.entropy = entropy
+        resource.type_id = type_id
+        resource.type_str = type_str
+        resource.name_id = name_id
+        resource.name_str = name_str
+        resource.language_id = language_id
+        resource.language_str = language_str
+        return resource
+
+    def from_json(self, d):
+        sample = Sample()
+        if 'hash_sha256' in d.keys(): sample.hash_sha256 = d['hash_sha256']
+        if 'hash_md5' in d.keys(): sample.hash_md5 = d['hash_md5']
+        if 'hash_sha1' in d.keys(): sample.hash_sha1 = d['hash_sha1']
+        if 'size' in d.keys(): sample.size = int(d['size'])
+        if 'code_histogram' in d.keys(): sample.code_histogram = d['code_histogram']
+
+        if 'ssdeep' in d.keys(): sample.ssdeep = d['ssdeep']
+        if 'entropy' in d.keys(): sample.entropy = float(d['entropy'])
+
+        if 'file_size' in d.keys(): sample.file_size = int(d['file_size'])
+        if 'entry_point' in d.keys(): sample.entry_point = d['entry_point']
+        if 'first_kb' in d.keys(): sample.first_kb = d['first_kb']
+
+        if 'overlay_sha256' in d.keys(): sample.overlay_sha256 = d['overlay_sha256']
+        if 'overlay_size' in d.keys(): sample.overlay_size = int(d['overlay_size'])
+        if 'overlay_ssdeep' in d.keys(): sample.overlay_ssdeep = d['overlay_ssdeep']
+        if 'overlay_entropy' in d.keys(): sample.overlay_entropy = float(d['overlay_entropy'])
+
+        if 'build_timestamp' in d.keys(): sample.build_timestamp = date_parser.parse(d['build_timestamp'])
+
+        if 'debug_directory_count' in d.keys(): sample.debug_directory_count = int(d['debug_directory_count'])
+        if 'debug_timestamp' in d.keys(): sample.debug_timestamp = date_parser.parse(d['debug_timestamp'])
+        if 'pdb_timestamp' in d.keys(): sample.pdb_timestamp = date_parser.parse(d['pdb_timestamp'])
+        if 'pdb_path' in d.keys(): sample.pdb_path = d['pdb_path']
+        if 'pdb_guid' in d.keys(): sample.pdb_guid = d['pdb_guid']
+        if 'pdb_age' in d.keys(): sample.pdb_age = d['pdb_age']
+        if 'pdb_signature' in d.keys(): sample.pdb_signature = d['pdb_signature']
+
+        if 'strings_count_of_length_at_least_10' in d.keys():
+            sample.strings_count_of_length_at_least_10 = int(d['strings_count_of_length_at_least_10'])
+        if 'strings_count' in d.keys(): sample.strings_count = int(d['strings_count'])
+        if 'heuristic_iocs' in d.keys(): sample.heuristic_iocs = d['heuristic_iocs']
+
+        if 'export_name' in d.keys(): sample.export_name = d['export_name']
+        if 'exports' in d.keys():
+            sample.exports = [
+                self.create_export(export['address'], export['name'], export['ordinal'])
+                for export in d['exports']
+            ]
+        if 'imports' in d.keys():
+            sample.imports = [
+                self.create_import(sample_import['dll_name'], sample_import['address'], sample_import['name'])
+                for sample_import in d['imports']
+            ]
+
+        if 'sections' in d.keys():
+            sample.sections = [
+                self.create_section(
+                    section['hash_sha256'], section['name'], section['virtual_address'],
+                    section['virtual_size'], section['raw_size'], section['entropy'], section['ssdeep'],
+                )
+                for section in d['sections']
+            ]
+
+        if 'resources' in d.keys():
+            sample.resources = [
+                self.create_resource(
+                    resource['hash_sha256'], resource['offset'], resource['size'], resource['actual_size'],
+                    resource['ssdeep'], resource['entropy'], resource['type_id'], resource['type_str'],
+                    resource['name_id'], resource['name_str'], resource['language_id'], resource['language_str']
+                )
+                for resource in d['resources']
+            ]
+
+
 class JsonFactory(object):
     def __init__(self, filter=None):
         self.filter = filter
@@ -153,7 +269,6 @@ class JsonFactory(object):
         return '%s' % data
 
     def from_sample(self, sample):
-        # TODO magic_id
         d = {}
         if sample.hash_sha256 is not None: d['hash_sha256'] = sample.hash_sha256
         if sample.hash_md5 is not None: d['hash_md5'] = sample.hash_md5
@@ -175,7 +290,8 @@ class JsonFactory(object):
 
         if sample.build_timestamp is not None: d['build_timestamp'] = self._format_timestamp(sample.build_timestamp)
 
-        if sample.debug_directory_count is not None: d['debug_directory_count'] = sample.debug_directory_count
+        if sample.debug_directory_count is not None:
+            d['debug_directory_count'] = self._format_int(sample.debug_directory_count)
         if sample.debug_timestamp is not None: d['debug_timestamp'] = self._format_timestamp(sample.debug_timestamp)
         if sample.pdb_timestamp is not None: d['pdb_timestamp'] = self._format_timestamp(sample.pdb_timestamp)
         if sample.pdb_path is not None: d['pdb_path'] = sample.pdb_path
@@ -184,8 +300,8 @@ class JsonFactory(object):
         if sample.pdb_signature is not None: d['pdb_signature'] = sample.pdb_signature
 
         if sample.strings_count_of_length_at_least_10 is not None:
-            d['strings_count_of_length_at_least_10'] = sample.strings_count_of_length_at_least_10
-        if sample.strings_count is not None: d['strings_count'] = sample.strings_count
+            d['strings_count_of_length_at_least_10'] = self._format_int(sample.strings_count_of_length_at_least_10)
+        if sample.strings_count is not None: d['strings_count'] = self._format_int(sample.strings_count)
         if sample.heuristic_iocs is not None: d['heuristic_iocs'] = sample.heuristic_iocs
 
         if sample.export_name is not None: d['export_name'] = sample.export_name
@@ -199,12 +315,6 @@ class JsonFactory(object):
                 {'dll_name': export.dll_name, 'address': export.address, 'name': export.name}
                 for export in sample.imports
             ]
-
-        if sample.export_table_timestamp is not None: d['export_table_timestamp'] = sample.export_table_timestamp
-        if sample.resource_timestamp is not None:
-            d['resource_timestamp'] = self._format_timestamp(sample.resource_timestamp)
-        if sample.certificate_signing_timestamp is not None:
-            d['certificate_signing_timestamp'] = self._format_timestamp(sample.certificate_signing_timestamp)
 
         if sample.sections:
             d['sections'] = [
