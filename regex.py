@@ -1,4 +1,3 @@
-from entropy import shannon_entropy
 import re
 
 
@@ -20,8 +19,37 @@ class RegexFactory(object):
         return re.compile(('([\w/]{%s}[\w/]*)' % min_char_count).encode())
 
 
-def entropy(data):
-    return shannon_entropy(data)
+try:
+    from entropy import shannon_entropy
+
+
+    def entropy(data):
+        return shannon_entropy(data)
+except ImportError:
+    import numpy as np
+    import math
+
+    def entropy(data):
+        """ Computes entropy of label distribution. """
+        n_labels = len(data)
+
+        if n_labels <= 1:
+            return 0
+
+        counts = np.bincount(data)
+        probs = counts / n_labels
+        n_classes = np.count_nonzero(probs)
+
+        if n_classes <= 1:
+            return 0
+
+        ent = 0.
+
+        # Compute standard entropy.
+        for i in probs:
+            ent -= i * math.log(i, base=n_classes)
+
+        return ent
 
 
 def null_terminate_and_decode_utf8(str):
