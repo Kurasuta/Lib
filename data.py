@@ -19,6 +19,8 @@ class Sample(FrozenClass):
         self.hash_md5 = None
         self.hash_sha1 = None
         self.size = None
+        self.peyd = None
+        self.magic = None
 
         self.ssdeep = None
         self.entropy = None
@@ -184,6 +186,8 @@ class SampleFactory(object):
         if 'hash_sha1' in d.keys(): sample.hash_sha1 = d['hash_sha1']
         if 'size' in d.keys(): sample.size = int(d['size'])
         if 'code_histogram' in d.keys(): sample.code_histogram = d['code_histogram']
+        if 'magic' in d.keys(): sample.magic = d['magic']
+        if 'peyd' in d.keys(): sample.peyd = d['peyd']
 
         if 'ssdeep' in d.keys(): sample.ssdeep = d['ssdeep']
         if 'entropy' in d.keys(): sample.entropy = float(d['entropy'])
@@ -275,6 +279,8 @@ class JsonFactory(object):
         if sample.hash_sha1 is not None: d['hash_sha1'] = sample.hash_sha1
         if sample.size is not None: d['size'] = self._format_int(sample.size)
         if sample.code_histogram is not None: d['code_histogram'] = sample.code_histogram
+        if sample.magic is not None: d['magic'] = sample.magic
+        if sample.peyd is not None: d['peyd'] = sample.peyd
 
         if sample.ssdeep is not None: d['ssdeep'] = sample.ssdeep
         if sample.entropy is not None: d['entropy'] = self._format_float(sample.entropy)
