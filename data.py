@@ -193,6 +193,7 @@ class SampleFactory(object):
 
     def from_json(self, d):
         sample = Sample()
+
         if 'hash_sha256' in d.keys(): sample.hash_sha256 = d['hash_sha256']
         if 'hash_md5' in d.keys(): sample.hash_md5 = d['hash_md5']
         if 'hash_sha1' in d.keys(): sample.hash_sha1 = d['hash_sha1']
@@ -262,6 +263,8 @@ class SampleFactory(object):
                 )
                 for resource in d['resources']
             ]
+
+        return sample
 
 
 class JsonFactory(object):
