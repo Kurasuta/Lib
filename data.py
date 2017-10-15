@@ -35,14 +35,7 @@ class Sample(FrozenClass):
         self.overlay_entropy = None
         self.build_timestamp = None
 
-        self.debug_directory_count = None
-        self.debug_timestamp = None
-        self.pdb_timestamp = None
-        self.pdb_path = None
-        self.pdb_guid = None
-        self.pdb_age = None
-        self.pdb_signature = None
-
+        self.debug_directories = None
         self.export_name = None
         self.exports = None
         self.imports = None
@@ -130,6 +123,16 @@ class SampleImport(FrozenClass):
         self._freeze()
 
 
+class SampleDebugDirectory(FrozenClass):
+    def __init__(self):
+        self.timestamp = None
+        self.path = None
+        self.age = None
+        self.signature = None
+        self.guid = None
+        self._freeze()
+
+
 class SampleFactory(object):
     @staticmethod
     def create_export(address, name, ordinal):
@@ -179,6 +182,15 @@ class SampleFactory(object):
         resource.language_str = language_str
         return resource
 
+    def create_debug_directory(self, timestamp, path, age, signature, guid):
+        debug_directory = SampleDebugDirectory()
+        self.timestamp = timestamp
+        self.path = path
+        self.age = age
+        self.signature = signature
+        self.guid = guid
+        return debug_directory
+
     def from_json(self, d):
         sample = Sample()
         if 'hash_sha256' in d.keys(): sample.hash_sha256 = d['hash_sha256']
@@ -193,7 +205,7 @@ class SampleFactory(object):
         if 'entropy' in d.keys(): sample.entropy = float(d['entropy'])
 
         if 'file_size' in d.keys(): sample.file_size = int(d['file_size'])
-        if 'entry_point' in d.keys(): sample.entry_point = d['entry_point']
+        if 'entry_point' in d.keys(): sample.entry_point = int(d['entry_point'])
         if 'first_kb' in d.keys(): sample.first_kb = d['first_kb']
 
         if 'overlay_sha256' in d.keys(): sample.overlay_sha256 = d['overlay_sha256']
@@ -203,13 +215,17 @@ class SampleFactory(object):
 
         if 'build_timestamp' in d.keys(): sample.build_timestamp = date_parser.parse(d['build_timestamp'])
 
-        if 'debug_directory_count' in d.keys(): sample.debug_directory_count = int(d['debug_directory_count'])
-        if 'debug_timestamp' in d.keys(): sample.debug_timestamp = date_parser.parse(d['debug_timestamp'])
-        if 'pdb_timestamp' in d.keys(): sample.pdb_timestamp = date_parser.parse(d['pdb_timestamp'])
-        if 'pdb_path' in d.keys(): sample.pdb_path = d['pdb_path']
-        if 'pdb_guid' in d.keys(): sample.pdb_guid = d['pdb_guid']
-        if 'pdb_age' in d.keys(): sample.pdb_age = d['pdb_age']
-        if 'pdb_signature' in d.keys(): sample.pdb_signature = d['pdb_signature']
+        if 'debug_directories' in d.keys():
+            sample.debug_directories = [
+                self.create_debug_directory(
+                    date_parser.parse(debug_directory['timestamp']),
+                    debug_directory['path'],
+                    int(debug_directory['age']),
+                    debug_directory['signature'],
+                    debug_directory['guid']
+                )
+                for debug_directory in d['debug_directories']
+            ]
 
         if 'strings_count_of_length_at_least_10' in d.keys():
             sample.strings_count_of_length_at_least_10 = int(d['strings_count_of_length_at_least_10'])
@@ -286,7 +302,7 @@ class JsonFactory(object):
         if sample.entropy is not None: d['entropy'] = self._format_float(sample.entropy)
 
         if sample.file_size is not None: d['file_size'] = self._format_int(sample.file_size)
-        if sample.entry_point is not None: d['entry_point'] = self._format_hex(sample.entry_point)
+        if sample.entry_point is not None: d['entry_point'] = self._format_int(sample.entry_point)
         if sample.first_kb is not None: d['first_kb'] = sample.first_kb
 
         if sample.overlay_sha256 is not None: d['overlay_sha256'] = sample.overlay_sha256
@@ -296,10 +312,17 @@ class JsonFactory(object):
 
         if sample.build_timestamp is not None: d['build_timestamp'] = self._format_timestamp(sample.build_timestamp)
 
-        if sample.debug_directory_count is not None:
-            d['debug_directory_count'] = self._format_int(sample.debug_directory_count)
+        if sample.debug_directories:
+            d['debug_directories'] = [
+                {
+                    'timestamp': debug_directory.timestamp,
+                    'path': debug_directory.path,
+                    'age': debug_directory.age,
+                    'signature': debug_directory.signature,
+                    'guid': debug_directory.guid
+                } for debug_directory in sample.debug_directories
+            ]
         if sample.debug_timestamp is not None: d['debug_timestamp'] = self._format_timestamp(sample.debug_timestamp)
-        if sample.pdb_timestamp is not None: d['pdb_timestamp'] = self._format_timestamp(sample.pdb_timestamp)
         if sample.pdb_path is not None: d['pdb_path'] = sample.pdb_path
         if sample.pdb_guid is not None: d['pdb_guid'] = sample.pdb_guid
         if sample.pdb_age is not None: d['pdb_age'] = sample.pdb_age
