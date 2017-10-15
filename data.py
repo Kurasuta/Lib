@@ -322,11 +322,6 @@ class JsonFactory(object):
                     'guid': debug_directory.guid
                 } for debug_directory in sample.debug_directories
             ]
-        if sample.debug_timestamp is not None: d['debug_timestamp'] = self._format_timestamp(sample.debug_timestamp)
-        if sample.pdb_path is not None: d['pdb_path'] = sample.pdb_path
-        if sample.pdb_guid is not None: d['pdb_guid'] = sample.pdb_guid
-        if sample.pdb_age is not None: d['pdb_age'] = sample.pdb_age
-        if sample.pdb_signature is not None: d['pdb_signature'] = sample.pdb_signature
 
         if sample.strings_count_of_length_at_least_10 is not None:
             d['strings_count_of_length_at_least_10'] = self._format_int(sample.strings_count_of_length_at_least_10)
