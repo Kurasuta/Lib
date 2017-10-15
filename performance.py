@@ -26,7 +26,7 @@ class PerformanceTimer(list):
 class SubTimer(object):
     def __init__(self, super_timer):
         self.super_timer = super_timer
-        self.super_caption = self.super_timer[-1].caption
+        self.super_caption = '' if isinstance(super_timer, NullTimer) else self.super_timer[-1].caption
 
     def mark(self, caption):
         self.super_timer.mark('%s_%s' % (self.super_caption, caption))
