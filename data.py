@@ -23,6 +23,7 @@ class Sample(FrozenClass):
         self.magic = None
 
         self.ssdeep = None
+        self.imphash = None
         self.entropy = None
 
         self.magic_id = None
@@ -203,6 +204,7 @@ class SampleFactory(object):
         if 'peyd' in d.keys(): sample.peyd = d['peyd']
 
         if 'ssdeep' in d.keys(): sample.ssdeep = d['ssdeep']
+        if 'imphash' in d.keys(): sample.imphash = d['imphash']
         if 'entropy' in d.keys(): sample.entropy = float(d['entropy'])
 
         if 'file_size' in d.keys(): sample.file_size = int(d['file_size'])
@@ -302,6 +304,7 @@ class JsonFactory(object):
         if sample.peyd is not None: d['peyd'] = sample.peyd
 
         if sample.ssdeep is not None: d['ssdeep'] = sample.ssdeep
+        if sample.imphash is not None: d['imphash'] = sample.imphash
         if sample.entropy is not None: d['entropy'] = self._format_float(sample.entropy)
 
         if sample.file_size is not None: d['file_size'] = self._format_int(sample.file_size)
