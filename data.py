@@ -263,8 +263,10 @@ class SampleFactory(object):
             sample.resources = [
                 self.create_resource(
                     resource['hash_sha256'], resource['offset'], resource['size'], resource['actual_size'],
-                    resource['ssdeep'], resource['entropy'], resource['type_id'], resource['type_str'],
-                    resource['name_id'], resource['name_str'], resource['language_id'], resource['language_str']
+                    resource['ssdeep'], resource['entropy'],
+                    resource['type_id'] if 'type_id' in resource else None, resource['type_str'],
+                    resource['name_id'] if 'name_id' in resource else None, resource['name_str'],
+                    resource['language_id'] if 'language_id' in resource else None, resource['language_str']
                 )
                 for resource in d['resources']
             ]
