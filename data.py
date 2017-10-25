@@ -15,38 +15,37 @@ class FrozenClass(object):
 
 class Sample(FrozenClass):
     def __init__(self):
-        self.hash_sha256 = None
-        self.hash_md5 = None
-        self.hash_sha1 = None
-        self.size = None
-        self.peyd = None
-        self.magic = None
+        self.hash_sha256 = None  # type: str
+        self.hash_md5 = None  # type: str
+        self.hash_sha1 = None  # type: str
+        self.size = None  # type: int
+        self.peyd = None  # type: list[str]
+        self.magic = None  # type: str
 
-        self.ssdeep = None
-        self.imphash = None
-        self.entropy = None
+        self.ssdeep = None  # type: str
+        self.imphash = None  # type: str
+        self.entropy = None  # type: float
 
-        self.magic_id = None
-        self.file_size = None
-        self.entry_point = None
-        self.first_kb = None
-        self.overlay_sha256 = None
-        self.overlay_size = None
-        self.overlay_ssdeep = None
-        self.overlay_entropy = None
+        self.file_size = None  # type: int
+        self.entry_point = None  # type: int
+        self.first_kb = None  # type: bytearray
+        self.overlay_sha256 = None  # type: str
+        self.overlay_size = None  # type: int
+        self.overlay_ssdeep = None  # type: str
+        self.overlay_entropy = None  # type: float
         self.build_timestamp = None
 
-        self.debug_directories = None
-        self.export_name = None
-        self.exports = None
-        self.imports = None
+        self.debug_directories = None  # type: list[SampleDebugDirectory]
+        self.export_name = None  # type: str
+        self.exports = None  # type: list[SampleExport]
+        self.imports = None  # type: list[SampleImport]
 
-        self.strings_count_of_length_at_least_10 = None
-        self.strings_count = None
-        self.heuristic_iocs = None
+        self.strings_count_of_length_at_least_10 = None  # type: int
+        self.strings_count = None  # type: int
+        self.heuristic_iocs = None  # type: list[str]
 
-        self.sections = []
-        self.resources = []
+        self.sections = []  # type: list[SampleSection]
+        self.resources = []  # type: list[SampleResource]
         self.code_histogram = None
 
         self._freeze()
@@ -57,14 +56,14 @@ class Sample(FrozenClass):
 
 class SampleSection(FrozenClass):
     def __init__(self):
-        self.hash_sha256 = None
-        self.virtual_address = None
-        self.virtual_size = None
-        self.raw_size = None
-        self.name = None
+        self.hash_sha256 = None  # type: str
+        self.virtual_address = None  # type: int
+        self.virtual_size = None  # type: int
+        self.raw_size = None  # type: int
+        self.name = None  # type: str
 
-        self.entropy = None
-        self.ssdeep = None
+        self.entropy = None  # type: float
+        self.ssdeep = None  # type: str
 
         self._freeze()
 
@@ -80,19 +79,19 @@ class SampleSection(FrozenClass):
 
 class SampleResource(FrozenClass):
     def __init__(self):
-        self.hash_sha256 = None
-        self.offset = None
-        self.size = None
-        self.actual_size = None
-        self.ssdeep = None
-        self.entropy = None
+        self.hash_sha256 = None  # type: str
+        self.offset = None  # type: int
+        self.size = None  # type: int
+        self.actual_size = None  # type: int
+        self.ssdeep = None  # type: str
+        self.entropy = None  # type: float
 
-        self.type_id = None
-        self.type_str = None
-        self.name_id = None
-        self.name_str = None
-        self.language_id = None
-        self.language_str = None
+        self.type_id = None  # type: str
+        self.type_str = None  # type: str
+        self.name_id = None  # type: str
+        self.name_str = None  # type: str
+        self.language_id = None  # type: str
+        self.language_str = None  # type: str
 
         self._freeze()
 
@@ -110,27 +109,27 @@ class SampleResource(FrozenClass):
 
 class SampleExport(FrozenClass):
     def __init__(self):
-        self.address = None
-        self.name = None
-        self.ordinal = None
+        self.address = None  # type: int
+        self.name = None  # type: str
+        self.ordinal = None  # type: str
         self._freeze()
 
 
 class SampleImport(FrozenClass):
     def __init__(self):
-        self.dll_name = None
-        self.address = None
-        self.name = None
+        self.dll_name = None  # type: str
+        self.address = None  # type: int
+        self.name = None  # type: str
         self._freeze()
 
 
 class SampleDebugDirectory(FrozenClass):
     def __init__(self):
         self.timestamp = None
-        self.path = None
-        self.age = None
-        self.signature = None
-        self.guid = None
+        self.path = None  # type: str
+        self.age = None  # type: int
+        self.signature = None  # type: str
+        self.guid = None  # type: str
         self._freeze()
 
 
@@ -193,6 +192,10 @@ class SampleFactory(object):
         return debug_directory
 
     def from_json(self, d):
+        """
+        :param d:
+        :return: Sample
+        """
         sample = Sample()
 
         if 'hash_sha256' in d.keys(): sample.hash_sha256 = d['hash_sha256']
