@@ -226,7 +226,7 @@ class SampleFactory(object):
                 self.create_debug_directory(
                     date_parser.parse(debug_directory['timestamp']),
                     debug_directory['path'],
-                    int(debug_directory['age']),
+                    int(debug_directory['age']) if debug_directory['age'] else None,
                     debug_directory['signature'],
                     debug_directory['guid']
                 )
