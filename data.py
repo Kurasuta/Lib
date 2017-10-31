@@ -224,7 +224,7 @@ class SampleFactory(object):
         if 'debug_directories' in d.keys():
             sample.debug_directories = [
                 self.create_debug_directory(
-                    date_parser.parse(debug_directory['timestamp']),
+                    date_parser.parse(debug_directory['timestamp']) if debug_directory['timestamp'] else None,
                     debug_directory['path'],
                     int(debug_directory['age']) if debug_directory['age'] else None,
                     debug_directory['signature'],
