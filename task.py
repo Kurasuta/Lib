@@ -22,7 +22,7 @@ class TaskResponse(FrozenClass):
 
 
 class TaskFactory(object):
-    def __init__(self, connection):
+    def __init__(self, connection=None):
         self.connection = connection
 
     def request_from_json(self, d):
@@ -39,6 +39,14 @@ class TaskFactory(object):
                 raise InvalidUsage('Consumer with name "%s" does not exist' % d['name'])
             task_consumer_id = int(row[0])
         return TaskRequest(task_consumer_id, d['name'], d['plugins'])
+
+    def response_from_json(self, d):
+        if 'id' not in d:
+            raise Exception('Keu "id" missing in response.')
+        if 'payload' not in d:
+            raise Exception('Keu "payload" missing in response.')
+
+        return TaskResponse(d['id'], d['payload'])
 
     def random_unassigned(self, task_request):
         """
