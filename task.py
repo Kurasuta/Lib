@@ -76,3 +76,13 @@ class TaskFactory(object):
             )
 
             return task
+
+    def mark_as_completed(self, id):
+        with self.connection.cursor() as cursor:
+            cursor.execute('SELECT consumer_id FROM task WHERE (id = %s)', (id,))
+            row = cursor.fetchone()
+            if not row:
+                raise InvalidUsage('Task with id %s does not exist' % id)
+            # consumer_id = row[0] TODO check if consumer_ids match
+
+            cursor.execute('UPDATE task SET completed_at = now() WHERE (id = %s)', (id,))

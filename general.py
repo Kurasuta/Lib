@@ -59,3 +59,46 @@ class KurasutaSystem(object):
                 pass
             else:
                 raise
+
+
+class KurasutaDatabase(object):
+    def __init__(self, connection):
+        self.connection = connection
+
+    def delete_sample(self, hash_sha256):
+        with self.connection.cursor() as cursor:
+            cursor.execute('SELECT id FROM sample WHERE (hash_sha256 = %s)', (hash_sha256,))
+            sample_id = cursor.fetchone()[0]
+            cursor.execute('DELETE FROM sample_has_peyd WHERE (sample_id = %s)', (sample_id,))
+            cursor.execute('DELETE FROM sample_has_heuristic_ioc WHERE (sample_id = %s)', (sample_id,))
+            cursor.execute('DELETE FROM debug_directory WHERE (sample_id = %s)', (sample_id,))
+            cursor.execute('DELETE FROM section WHERE (sample_id = %s)', (sample_id,))
+            cursor.execute('DELETE FROM resource WHERE (sample_id = %s)', (sample_id,))
+            cursor.execute('DELETE FROM guid WHERE (sample_id = %s)', (sample_id,))
+            cursor.execute('DELETE FROM export_symbol WHERE (sample_id = %s)', (sample_id,))
+            cursor.execute('DELETE FROM import WHERE (sample_id = %s)', (sample_id,))
+            cursor.execute('DELETE FROM sample WHERE (id = %s)', (sample_id,))
+
+    def ensure_row(self, table, field, value):
+        select_sql = 'SELECT id FROM %s WHERE %s = %%s' % (table, field)
+        insert_sql = 'INSERT INTO %s (%s) VALUES(%%s) RETURNING id' % (table, field)
+        with self.connection.cursor() as cursor:
+            cursor.execute(select_sql, (value,))
+            result = cursor.fetchone()
+        if not result:
+            with self.connection.cursor() as cursor:
+                cursor.execute(insert_sql, (value,))
+                result = cursor.fetchone()
+        return result[0]
+
+    def ensure_resource_pair(self, pair_name, content_id, content_str):
+        select_sql = 'SELECT id FROM resource_%s_pair WHERE (content_id = %%s) AND (content_str = %%s)' % (pair_name,)
+        insert_sql = 'INSERT INTO resource_%s_pair (content_id, content_str) VALUES(%%s) RETURNING id' % (pair_name,)
+        with self.connection.cursor() as cursor:
+            cursor.execute(select_sql, (content_id, content_str))
+            result = cursor.fetchone()
+        if not result:
+            with self.connection.cursor() as cursor:
+                cursor.execute(insert_sql, (content_id, content_str))
+                result = cursor.fetchone()
+        return result[0]
