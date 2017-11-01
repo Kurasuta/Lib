@@ -132,6 +132,14 @@ class SampleDebugDirectory(FrozenClass):
         self.guid = None  # type: str
         self._freeze()
 
+    def __repr__(self):
+        return '<SampleDebugDirectory path=%s,age=%s,signature=%s,guid=%s>' % (
+            self.path,
+            self.age,
+            self.signature,
+            self.guid
+        )
+
 
 class SampleFactory(object):
     @staticmethod
@@ -184,11 +192,11 @@ class SampleFactory(object):
 
     def create_debug_directory(self, timestamp, path, age, signature, guid):
         debug_directory = SampleDebugDirectory()
-        self.timestamp = timestamp
-        self.path = path
-        self.age = age
-        self.signature = signature
-        self.guid = guid
+        debug_directory.timestamp = timestamp
+        debug_directory.path = path
+        debug_directory.age = age
+        debug_directory.signature = signature
+        debug_directory.guid = guid
         return debug_directory
 
     def from_json(self, d):
