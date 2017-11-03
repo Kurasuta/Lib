@@ -7,7 +7,7 @@ class TaskRequest(FrozenClass):
     def __init__(self, task_consumer_id, task_consumer_name, plugins):
         self.task_consumer_id = task_consumer_id  # type: int
         self.task_consumer_name = task_consumer_name  # type: str
-        self.plugins = tuple(plugins) if isinstance(plugins, list) else plugins  # type: tuple[Plugin]
+        self.plugins = tuple(plugins) if isinstance(plugins, list) else plugins  # type: tuple(str)
         self._freeze()
 
 
@@ -40,7 +40,8 @@ class TaskFactory(object):
             task_consumer_id = int(row[0])
         return TaskRequest(task_consumer_id, d['name'], d['plugins'])
 
-    def response_from_json(self, d):
+    @staticmethod
+    def response_from_json(d):
         if 'id' not in d:
             raise Exception('Keu "id" missing in response.')
         if 'payload' not in d:
