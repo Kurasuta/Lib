@@ -75,8 +75,10 @@ class SampleFunction(FrozenClass):
         self.outdegree = None  # type: int
         self.type = None  # type: str
 
+        self.opcodes_sha256 = None  # type: str
+        self.opcodes_crc32 = None  # type: str
         self.cleaned_opcodes_sha256 = None  # type: str
-        self.cleaned_opcodes_crc16 = None  # type: str
+        self.cleaned_opcodes_crc32 = None  # type: str
 
         self._freeze()
 
@@ -230,7 +232,7 @@ class SampleFactory(object):
     @staticmethod
     def create_function(
             offset, size, real_size, name, calltype, cc, cost, ebbs, edges, indegree, nargs, nbbs,
-            nlocals, outdegree, type, cleaned_opcodes_sha256, cleaned_opcodes_crc16
+            nlocals, outdegree, type, opcodes_sha256, opcodes_crc32, cleaned_opcodes_sha256, cleaned_opcodes_crc32
     ):
         func = SampleFunction()
         func.offset = offset
@@ -248,8 +250,10 @@ class SampleFactory(object):
         func.nlocals = nlocals
         func.outdegree = outdegree
         func.type = type
+        func.opcodes_sha256 = opcodes_sha256
+        func.opcodes_crc32 = opcodes_crc32
         func.cleaned_opcodes_sha256 = cleaned_opcodes_sha256
-        func.cleaned_opcodes_crc16 = cleaned_opcodes_crc16
+        func.cleaned_opcodes_crc32 = cleaned_opcodes_crc32
         return func
 
     def from_json(self, d):
@@ -353,8 +357,10 @@ class SampleFactory(object):
                     func['nlocals'],
                     func['outdegree'],
                     func['type'],
+                    func['opcodes_sha256'],
+                    func['opcodes_crc32'],
                     func['cleaned_opcodes_sha256'],
-                    func['cleaned_opcodes_crc16']
+                    func['cleaned_opcodes_crc32']
                 )
                 for func in d['functions']
             ]
@@ -494,8 +500,10 @@ class JsonFactory(object):
                     'nlocals': func.nlocals,
                     'outdegree': func.outdegree,
                     'type': func.type,
+                    'opcodes_sha256': func.opcodes_sha256,
+                    'opcodes_crc32': func.opcodes_crc32,
                     'cleaned_opcodes_sha256': func.cleaned_opcodes_sha256,
-                    'cleaned_opcodes_crc16': func.cleaned_opcodes_crc16,
+                    'cleaned_opcodes_crc32': func.cleaned_opcodes_crc32,
                 }
 
                 d['functions'].append(json_func)
