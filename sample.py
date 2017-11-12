@@ -46,12 +46,39 @@ class Sample(FrozenClass):
 
         self.sections = []  # type: list[SampleSection]
         self.resources = []  # type: list[SampleResource]
+
+        self.functions = []  # type: list[SampleFunction]
         self.code_histogram = None
 
         self._freeze()
 
     def __repr__(self):
         return '<Sample %s,%s,%s>' % (self.hash_sha256, self.hash_md5, self.hash_sha1)
+
+
+class SampleFunction(FrozenClass):
+    def __init__(self):
+        self.offset = None  # type: int
+        self.size = None  # type: int
+        self.real_size = None  # type: int
+        self.name = None  # type: str
+
+        self.calltype = None  # type: str
+        self.cc = None  # type: int
+        self.cost = None  # type: int
+        self.ebbs = None  # type: int
+        self.edges = None  # type: int
+        self.indegree = None  # type: int
+        self.nargs = None  # type: int
+        self.nbbs = None  # type: int
+        self.nlocals = None  # type: int
+        self.outdegree = None  # type: int
+        self.type = None  # type: str
+
+        self.cleaned_opcodes_sha256 = None  # type: str
+        self.cleaned_opcodes_crc16 = None  # type: str
+
+        self._freeze()
 
 
 class SampleSection(FrozenClass):
@@ -190,7 +217,8 @@ class SampleFactory(object):
         resource.language_str = language_str
         return resource
 
-    def create_debug_directory(self, timestamp, path, age, signature, guid):
+    @staticmethod
+    def create_debug_directory(timestamp, path, age, signature, guid):
         debug_directory = SampleDebugDirectory()
         debug_directory.timestamp = timestamp
         debug_directory.path = path
@@ -198,6 +226,31 @@ class SampleFactory(object):
         debug_directory.signature = signature
         debug_directory.guid = guid
         return debug_directory
+
+    @staticmethod
+    def create_function(
+            offset, size, real_size, name, calltype, cc, cost, ebbs, edges, indegree, nargs, nbbs,
+            nlocals, outdegree, type, cleaned_opcodes_sha256, cleaned_opcodes_crc16
+    ):
+        func = SampleFunction()
+        func.offset = offset
+        func.size = size
+        func.real_size = real_size
+        func.name = name
+        func.calltype = calltype
+        func.cc = cc
+        func.cost = cost
+        func.ebbs = ebbs
+        func.edges = edges
+        func.indegree = indegree
+        func.nargs = nargs
+        func.nbbs = nbbs
+        func.nlocals = nlocals
+        func.outdegree = outdegree
+        func.type = type
+        func.cleaned_opcodes_sha256 = cleaned_opcodes_sha256
+        func.cleaned_opcodes_crc16 = cleaned_opcodes_crc16
+        return func
 
     def from_json(self, d):
         """
@@ -280,6 +333,30 @@ class SampleFactory(object):
                     resource['language_str'] if 'language_str' in resource else None
                 )
                 for resource in d['resources']
+            ]
+
+        if 'functions' in d.keys():
+            sample.functions = [
+                self.create_function(
+                    func['offset'],
+                    func['size'],
+                    func['real_size'],
+                    func['name'],
+                    func['calltype'],
+                    func['cc'],
+                    func['cost'],
+                    func['ebbs'],
+                    func['edges'],
+                    func['indegree'],
+                    func['nargs'],
+                    func['nbbs'],
+                    func['nlocals'],
+                    func['outdegree'],
+                    func['type'],
+                    func['cleaned_opcodes_sha256'],
+                    func['cleaned_opcodes_crc16']
+                )
+                for func in d['functions']
             ]
 
         return sample
@@ -397,6 +474,31 @@ class JsonFactory(object):
                     '%s' % self._format_pefile_unicode_wrapper(sample_resource.language_str)
 
                 d['resources'].append(json_resource)
+
+        if sample.functions:
+            d['functions'] = []
+            for func in sample.functions:
+                json_func = {
+                    'offset': func.offset,
+                    'size': func.size,
+                    'real_size': func.real_size,
+                    'name': func.name,
+                    'calltype': func.calltype,
+                    'cc': func.cc,
+                    'cost': func.cost,
+                    'ebbs': func.ebbs,
+                    'edges': func.edges,
+                    'indegree': func.indegree,
+                    'nargs': func.nargs,
+                    'nbbs': func.nbbs,
+                    'nlocals': func.nlocals,
+                    'outdegree': func.outdegree,
+                    'type': func.type,
+                    'cleaned_opcodes_sha256': func.cleaned_opcodes_sha256,
+                    'cleaned_opcodes_crc16': func.cleaned_opcodes_crc16,
+                }
+
+                d['functions'].append(json_func)
 
         if self.filter:
             d = {k: v for k, v in d.items() if self.filter in k}
