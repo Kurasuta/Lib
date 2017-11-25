@@ -21,6 +21,18 @@ class TaskResponse(FrozenClass):
         return {'id': self.id, 'payload': self.payload}
 
 
+class Task(FrozenClass):
+    def __init__(self, task_id, task_type, payload, created_at, assigned_at, consumer_name):
+        self.id = task_id  # type: int
+        self.type = task_type  # type: str
+        self.payload = payload  # type: str
+        self.created_at = created_at  # type: datetime
+        self.assigned_at = assigned_at  # type: datetime
+        self.consumer_name = consumer_name  # type: str
+
+        self._freeze()
+
+
 class TaskFactory(object):
     def __init__(self, connection=None):
         self.connection = connection
@@ -78,12 +90,30 @@ class TaskFactory(object):
 
             return task
 
-    def mark_as_completed(self, id):
-        with self.connection.cursor() as cursor:
-            cursor.execute('SELECT consumer_id FROM task WHERE (id = %s)', (id,))
-            row = cursor.fetchone()
-            if not row:
-                raise InvalidUsage('Task with id %s does not exist' % id)
-            # consumer_id = row[0] TODO check if consumer_ids match
+    @staticmethod
+    def by_row(row):
+        return Task(row['id'], row['type'], row['payload'], row['created_at'], row['assigned_at'], row['consumer_name'])
 
-            cursor.execute('UPDATE task SET completed_at = now() WHERE (id = %s)', (id,))
+    def by_id(self, task_id):
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                '''
+                SELECT
+                    t.id, t.type, t.payload, t.created_at, t.assigned_at,
+                    tc.name AS consumer_name
+                FROM task t
+                LEFT JOIN task_consumer tc ON (t.consumer_id = tc.id)
+                WHERE (t.id = %s)
+                ''',
+                (task_id,)
+            )
+            return self.by_row(cursor.fetchone())
+
+    def mark_as_completed(self, task_id):
+        with self.connection.cursor() as cursor:
+            task = self.by_id(task_id)
+            if not task:
+                raise InvalidUsage('Task with id %s does not exist' % task_id)
+
+            cursor.execute('UPDATE task SET completed_at = now() WHERE (id = %s)', (task.id,))
+            return task
