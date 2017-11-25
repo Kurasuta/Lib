@@ -12,13 +12,14 @@ class TaskRequest(FrozenClass):
 
 
 class TaskResponse(FrozenClass):
-    def __init__(self, id, payload):
+    def __init__(self, id, type, payload):
         self.id = id  # type: int
+        self.type = type  # type: str
         self.payload = payload  # type: dict
         self._freeze()
 
     def to_json(self):
-        return {'id': self.id, 'payload': self.payload}
+        return {'id': self.id, 'type': self.type, 'payload': self.payload}
 
 
 class Task(FrozenClass):
@@ -59,7 +60,7 @@ class TaskFactory(object):
         if 'payload' not in d:
             raise Exception('Keu "payload" missing in response.')
 
-        return TaskResponse(d['id'], d['payload'])
+        return TaskResponse(d['id'], d['type'], d['payload'])
 
     def random_unassigned(self, task_request):
         """
@@ -76,13 +77,13 @@ class TaskFactory(object):
                 return None
             offset = random.randint(0, count - 1)
             cursor.execute(
-                'SELECT id, payload FROM task WHERE (assigned_at IS NULL) AND (type IN %s) LIMIT 1 OFFSET %s',
+                'SELECT id, "type", payload FROM task WHERE (assigned_at IS NULL) AND (type IN %s) LIMIT 1 OFFSET %s',
                 (task_request.plugins, offset)
             )
             task_row = cursor.fetchone()
             if not task_row:
                 return None
-            task = TaskResponse(task_row[0], task_row[1])
+            task = TaskResponse(task_row[0], task_row[1], task_row[2])
             cursor.execute(
                 'UPDATE task SET assigned_at = now(), consumer_id = %s WHERE (id = %s)',
                 (task_request.task_consumer_id, task.id)
