@@ -93,7 +93,7 @@ class TaskFactory(object):
 
     @staticmethod
     def by_row(row):
-        return Task(row['id'], row['type'], row['payload'], row['created_at'], row['assigned_at'], row['consumer_name'])
+        return Task(row[0], row[1], row[2], row[3], row[4], row[5])
 
     def by_id(self, task_id):
         with self.connection.cursor() as cursor:
