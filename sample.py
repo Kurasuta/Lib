@@ -80,7 +80,7 @@ class SampleFunction(FrozenClass):
         self.cleaned_opcodes_sha256 = None  # type: str
         self.cleaned_opcodes_crc32 = None  # type: str
 
-        self.raw = None  # type: list
+        self.opcodes = None  # type: list
 
         self._freeze()
 
@@ -234,7 +234,8 @@ class SampleFactory(object):
     @staticmethod
     def create_function(
             offset, size, real_size, name, calltype, cc, cost, ebbs, edges, indegree, nargs, nbbs,
-            nlocals, outdegree, type, opcodes_sha256, opcodes_crc32, cleaned_opcodes_sha256, cleaned_opcodes_crc32, raw
+            nlocals, outdegree, type, opcodes_sha256, opcodes_crc32, cleaned_opcodes_sha256, cleaned_opcodes_crc32,
+            opcodes
     ):
         func = SampleFunction()
         func.offset = offset
@@ -256,7 +257,7 @@ class SampleFactory(object):
         func.opcodes_crc32 = opcodes_crc32
         func.cleaned_opcodes_sha256 = cleaned_opcodes_sha256
         func.cleaned_opcodes_crc32 = cleaned_opcodes_crc32
-        func.raw = raw
+        func.opcodes = opcodes
         return func
 
     def from_json(self, d):
@@ -364,7 +365,7 @@ class SampleFactory(object):
                     func['opcodes_crc32'],
                     func['cleaned_opcodes_sha256'],
                     func['cleaned_opcodes_crc32'],
-                    func['raw']
+                    func['opcodes']
                 )
                 for func in d['functions']
             ]
@@ -508,7 +509,7 @@ class JsonFactory(object):
                     'opcodes_crc32': func.opcodes_crc32,
                     'cleaned_opcodes_sha256': func.cleaned_opcodes_sha256,
                     'cleaned_opcodes_crc32': func.cleaned_opcodes_crc32,
-                    'raw': func.raw,
+                    'opcodes': func.opcodes,
                 }
 
                 d['functions'].append(json_func)
