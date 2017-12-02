@@ -38,6 +38,9 @@ class TaskFactory(object):
     def __init__(self, connection=None):
         self.connection = connection
 
+    def get_types_sorted_by_priority(self):
+        return ['PEMetadata', 'R2Disassembly']
+
     def request_from_json(self, d):
         if 'name' not in d:
             raise InvalidUsage('Key "name" missing in request.')
@@ -62,23 +65,24 @@ class TaskFactory(object):
 
         return TaskResponse(d['id'], d['type'], d['payload'])
 
-    def random_unassigned(self, task_request):
+    def random_unassigned(self, plugin, consumer_id):
         """
-        :type task_request: TaskRequest
+        :type consumer_id: int
+        :type plugin: str
         :return: TaskResponse
         """
         with self.connection.cursor() as cursor:
             cursor.execute(
-                'SELECT COUNT(id) FROM task WHERE (assigned_at IS NULL) AND (type IN %s)',
-                (task_request.plugins,)
+                'SELECT COUNT(id) FROM task WHERE (assigned_at IS NULL) AND (type = %s)',
+                (plugin,)
             )
             count = cursor.fetchone()[0]
             if not count:
                 return None
             offset = random.randint(0, count - 1)
             cursor.execute(
-                'SELECT id, "type", payload FROM task WHERE (assigned_at IS NULL) AND (type IN %s) LIMIT 1 OFFSET %s',
-                (task_request.plugins, offset)
+                'SELECT id, "type", payload FROM task WHERE (assigned_at IS NULL) AND (type = %s) LIMIT 1 OFFSET %s',
+                (plugin, offset)
             )
             task_row = cursor.fetchone()
             if not task_row:
@@ -86,7 +90,7 @@ class TaskFactory(object):
             task = TaskResponse(task_row[0], task_row[1], task_row[2])
             cursor.execute(
                 'UPDATE task SET assigned_at = now(), consumer_id = %s WHERE (id = %s)',
-                (task_request.task_consumer_id, task.id)
+                (consumer_id, task.id)
             )
 
             return task
