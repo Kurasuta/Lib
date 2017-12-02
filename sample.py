@@ -1,5 +1,4 @@
 from dateutil import parser as date_parser
-import json
 
 
 class FrozenClass(object):
@@ -117,7 +116,7 @@ class SampleMeta(FrozenClass):
 
         self._freeze()
 
-    def to_json(self):
+    def to_dict(self):
         data = {}
         if self.tags:
             data['tags'] = self.tags
@@ -125,7 +124,7 @@ class SampleMeta(FrozenClass):
             data['file_names'] = self.file_names
         if self.source_id:
             data['source_id'] = self.source_id
-        json.dumps(data)
+        return data
 
 
 class SampleResource(FrozenClass):

@@ -109,7 +109,7 @@ class KurasutaDatabase(object):
         """
         :type meta: SampleMeta
         """
-        payload = meta.to_json()
+        payload = meta.to_dict()
         payload['hash_sha256'] = hash_sha256
         with self.connection.cursor() as cursor:
             cursor.execute('INSERT INTO task ("type", payload) VALUES(%s, %s)', (task_type, Json(payload)))
