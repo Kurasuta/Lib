@@ -4,6 +4,8 @@ import json
 import os
 import errno
 from datetime import datetime
+from lib.sample import SampleMeta
+from psycopg2.extras import Json
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -102,3 +104,24 @@ class KurasutaDatabase(object):
                 cursor.execute(insert_sql, (content_id, content_str))
                 result = cursor.fetchone()
         return result[0]
+
+    def create_task(self, task_type, hash_sha256, meta=None):
+        """
+        :type meta: SampleMeta
+        """
+        payload = meta.to_json()
+        payload['hash_sha256'] = hash_sha256
+        with self.connection.cursor() as cursor:
+            cursor.execute('INSERT INTO task ("type", payload) VALUES(%s, %s)', (task_type, Json(payload)))
+
+
+class SampleSourceRepository(object):
+    def __init__(self, connection):
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT id, identifier FROM sample_source')
+            self.cache = dict(cursor.fetchall())
+
+    def get_by_identifier(self, identifier):
+        if identifier not in self.cache.keys():
+            raise Exception('sample source identifier "%s" not found' % identifier)
+        return self.cache[identifier]

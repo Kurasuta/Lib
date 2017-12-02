@@ -1,4 +1,5 @@
 from dateutil import parser as date_parser
+import json
 
 
 class FrozenClass(object):
@@ -106,6 +107,25 @@ class SampleSection(FrozenClass):
             self.raw_size,
             self.name
         )
+
+
+class SampleMeta(FrozenClass):
+    def __init__(self):
+        self.source_id = None  # type: None|int
+        self.tags = []  # type: list[str]
+        self.file_names = []  # type: list[str]
+
+        self._freeze()
+
+    def to_json(self):
+        data = {}
+        if self.tags:
+            data['tags'] = self.tags
+        if self.file_names:
+            data['file_names'] = self.file_names
+        if self.source_id:
+            data['source_id'] = self.source_id
+        json.dumps(data)
 
 
 class SampleResource(FrozenClass):
