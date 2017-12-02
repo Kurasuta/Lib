@@ -118,7 +118,7 @@ class KurasutaDatabase(object):
 class SampleSourceRepository(object):
     def __init__(self, connection):
         with connection.cursor() as cursor:
-            cursor.execute('SELECT id, identifier FROM sample_source')
+            cursor.execute('SELECT identifier, id FROM sample_source')
             self.cache = dict(cursor.fetchall())
 
     def get_by_identifier(self, identifier):
