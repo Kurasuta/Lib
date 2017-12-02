@@ -38,7 +38,8 @@ class TaskFactory(object):
     def __init__(self, connection=None):
         self.connection = connection
 
-    def get_types_sorted_by_priority(self):
+    @staticmethod
+    def get_types_sorted_by_priority():
         return ['PEMetadata', 'R2Disassembly']
 
     def request_from_json(self, d):
@@ -85,6 +86,7 @@ class TaskFactory(object):
                 (plugin, offset)
             )
             task_row = cursor.fetchone()
+
             if not task_row:
                 return None
             task = TaskResponse(task_row[0], task_row[1], task_row[2])

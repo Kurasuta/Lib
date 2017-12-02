@@ -50,6 +50,10 @@ class Sample(FrozenClass):
         self.functions = []  # type: list[SampleFunction]
         self.code_histogram = None
 
+        self.source_id = None  # type: int
+        self.tags = None  # type: list[str]
+        self.file_names = None  # type: list[str]
+
         self._freeze()
 
     def __repr__(self):
@@ -388,6 +392,13 @@ class SampleFactory(object):
                 )
                 for func in d['functions']
             ]
+
+        if 'source_id' in d.keys():
+            sample.source_id = d['source_id']
+        if 'tags' in d.keys():
+            sample.tags = d['tags']
+        if 'file_names' in d.keys():
+            sample.file_names = d['file_names']
 
         return sample
 
