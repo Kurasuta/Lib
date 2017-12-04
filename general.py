@@ -5,7 +5,6 @@ import os
 import errno
 from datetime import datetime
 from lib.sample import SampleMeta
-from psycopg2.extras import Json
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -112,6 +111,8 @@ class KurasutaDatabase(object):
         """
         :type meta: SampleMeta
         """
+        from psycopg2.extras import Json
+
         payload = meta.to_dict()
         payload['hash_sha256'] = hash_sha256
         with self.connection.cursor() as cursor:
