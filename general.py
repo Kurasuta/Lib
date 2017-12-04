@@ -80,6 +80,9 @@ class KurasutaDatabase(object):
             cursor.execute('DELETE FROM export_symbol WHERE (sample_id = %s)', (sample_id,))
             cursor.execute('DELETE FROM import WHERE (sample_id = %s)', (sample_id,))
             cursor.execute('DELETE FROM sample WHERE (id = %s)', (sample_id,))
+            cursor.execute('DELETE FROM sample_function WHERE (id = %s)', (sample_id,))
+            cursor.execute('DELETE FROM sample_has_file_name WHERE (id = %s)', (sample_id,))
+            cursor.execute('DELETE FROM sample_has_tag WHERE (id = %s)', (sample_id,))
 
     def ensure_row(self, table, field, value):
         select_sql = 'SELECT id FROM %s WHERE %s = %%s' % (table, field)
