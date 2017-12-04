@@ -110,11 +110,13 @@ class KurasutaDatabase(object):
 
     def create_task(self, task_type, hash_sha256, meta=None):
         """
+        :type task_type: str
+        :type hash_sha256: str
         :type meta: SampleMeta
         """
         from psycopg2.extras import Json
 
-        payload = meta.to_dict()
+        payload = meta.to_dict() if meta else {}
         payload['hash_sha256'] = hash_sha256
         with self.connection.cursor() as cursor:
             cursor.execute('INSERT INTO task ("type", payload) VALUES(%s, %s)', (task_type, Json(payload)))
