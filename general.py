@@ -81,6 +81,7 @@ class KurasutaDatabase(object):
             cursor.execute('DELETE FROM sample_function WHERE (sample_id = %s)', (sample_id,))
             cursor.execute('DELETE FROM sample_has_file_name WHERE (sample_id = %s)', (sample_id,))
             cursor.execute('DELETE FROM sample_has_tag WHERE (sample_id = %s)', (sample_id,))
+            cursor.execute('DELETE FROM sample_has_source WHERE (sample_id = %s)', (sample_id,))
             cursor.execute('DELETE FROM sample WHERE (id = %s)', (sample_id,))
 
     def ensure_row(self, table, field, value):
