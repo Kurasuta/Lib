@@ -21,7 +21,7 @@ class SampleRepository(object):
                 SELECT sample.hash_sha256
                 FROM section
                 LEFT JOIN sample ON (sample.id = section.sample_id)
-                LFET JOIN sample_has_source ON (sample.id = sample_has_source.sample_id)
+                LEFT JOIN sample_has_source ON (sample.id = sample_has_source.sample_id)
                 WHERE (section.hash_sha256 = %s) AND (sample_has_source.source_id in %s)
             ''', (sha256, self.allowed_source_ids))
             ret = []
