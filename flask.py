@@ -1,3 +1,6 @@
+import string
+
+
 class InvalidUsage(Exception):
     status_code = 400
 
@@ -12,3 +15,12 @@ class InvalidUsage(Exception):
         rv = dict(self.payload or ())
         rv['message'] = self.message
         return rv
+
+
+def validate_sha256(sha256):
+    if not sha256:
+        raise InvalidUsage('SHA256 empty', status_code=400)
+    if len(sha256) != 64:
+        raise InvalidUsage('SHA256 hash needs to be of length 64', status_code=400)
+    if not all(c in string.hexdigits for c in sha256):
+        raise InvalidUsage('SHA256 hash may only contain hex chars', status_code=400)
