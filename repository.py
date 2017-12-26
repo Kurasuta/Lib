@@ -1,4 +1,4 @@
-from sample import SampleFactory, Sample
+from .sample import SampleFactory, Sample
 
 
 class SampleRepository(object):
@@ -44,6 +44,8 @@ class SampleRepository(object):
 
             sample = Sample()
             row = cursor.fetchone()
+            if not row:
+                return None
             sample.hash_sha256 = row[0]
             sample.hash_md5 = row[1]
             sample.hash_sha1 = row[2]
