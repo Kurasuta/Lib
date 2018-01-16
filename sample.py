@@ -407,50 +407,30 @@ class JsonFactory(object):
     def __init__(self, filter=None):
         self.filter = filter
 
-    @staticmethod
-    def _format_int(data):
-        return '%i' % data
-
-    @staticmethod
-    def _format_hex(data):
-        return '0x%08x' % data
-
-    @staticmethod
-    def _format_float(data):
-        return '%f' % data
-
-    @staticmethod
-    def _format_timestamp(data):
-        return '%s' % data  # TODO
-
-    @staticmethod
-    def _format_pefile_unicode_wrapper(data):
-        return '%s' % data
-
     def from_sample(self, sample):
         d = {}
         if sample.hash_sha256 is not None: d['hash_sha256'] = sample.hash_sha256
         if sample.hash_md5 is not None: d['hash_md5'] = sample.hash_md5
         if sample.hash_sha1 is not None: d['hash_sha1'] = sample.hash_sha1
-        if sample.size is not None: d['size'] = self._format_int(sample.size)
+        if sample.size is not None: d['size'] = sample.size
         if sample.code_histogram is not None: d['code_histogram'] = sample.code_histogram
         if sample.magic is not None: d['magic'] = sample.magic
         if sample.peyd is not None: d['peyd'] = sample.peyd
 
         if sample.ssdeep is not None: d['ssdeep'] = sample.ssdeep
         if sample.imphash is not None: d['imphash'] = sample.imphash
-        if sample.entropy is not None: d['entropy'] = self._format_float(sample.entropy)
+        if sample.entropy is not None: d['entropy'] = sample.entropy
 
-        if sample.file_size is not None: d['file_size'] = self._format_int(sample.file_size)
-        if sample.entry_point is not None: d['entry_point'] = self._format_int(sample.entry_point)
+        if sample.file_size is not None: d['file_size'] = sample.file_size
+        if sample.entry_point is not None: d['entry_point'] = sample.entry_point
         if sample.first_kb is not None: d['first_kb'] = sample.first_kb
 
         if sample.overlay_sha256 is not None: d['overlay_sha256'] = sample.overlay_sha256
-        if sample.overlay_size is not None: d['overlay_size'] = self._format_int(sample.overlay_size)
+        if sample.overlay_size is not None: d['overlay_size'] = sample.overlay_size
         if sample.overlay_ssdeep is not None: d['overlay_ssdeep'] = sample.overlay_ssdeep
-        if sample.overlay_entropy is not None: d['overlay_entropy'] = self._format_float(sample.overlay_entropy)
+        if sample.overlay_entropy is not None: d['overlay_entropy'] = sample.overlay_entropy
 
-        if sample.build_timestamp is not None: d['build_timestamp'] = self._format_timestamp(sample.build_timestamp)
+        if sample.build_timestamp is not None: d['build_timestamp'] = '%s UTC' % sample.build_timestamp
 
         if sample.debug_directories:
             d['debug_directories'] = [
@@ -464,8 +444,8 @@ class JsonFactory(object):
             ]
 
         if sample.strings_count_of_length_at_least_10 is not None:
-            d['strings_count_of_length_at_least_10'] = self._format_int(sample.strings_count_of_length_at_least_10)
-        if sample.strings_count is not None: d['strings_count'] = self._format_int(sample.strings_count)
+            d['strings_count_of_length_at_least_10'] = sample.strings_count_of_length_at_least_10
+        if sample.strings_count is not None: d['strings_count'] = sample.strings_count
         if sample.heuristic_iocs is not None: d['heuristic_iocs'] = sample.heuristic_iocs
 
         if sample.export_name is not None: d['export_name'] = sample.export_name

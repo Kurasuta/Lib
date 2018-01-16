@@ -8,17 +8,20 @@ class SampleRepository(object):
 
         with self.db.cursor() as cursor:
             cursor.execute(
-                'SELECT id FROM sample_source WHERE (identifier IN %s)',
+                'SELECT id, identifier FROM sample_source WHERE (identifier IN %s)',
                 (tuple(allowed_source_identifiers),)
             )
-            self.allowed_source_ids = tuple([int(row[0]) for row in cursor.fetchall()])
+            result = [(int(row[0]), row[1]) for row in cursor.fetchall()]
+            self.allowed_source_ids = tuple([row[0] for row in result])
             if len(self.allowed_source_ids) != len(allowed_source_identifiers):
-                raise Exception('At least one source identifier is missing in database')
+                raise Exception(
+                    'Found %s when queried for source identifiers %s' % (result, allowed_source_identifiers)
+                )
 
     def by_section_hash(self, sha256):
         with self.db.cursor() as cursor:
             cursor.execute('''
-                SELECT sample.hash_sha256
+                SELECT sample.hash_sha256, sample.build_timestamp
                 FROM section
                 LEFT JOIN sample ON (sample.id = section.sample_id)
                 LEFT JOIN sample_has_source ON (sample.id = sample_has_source.sample_id)
@@ -28,6 +31,7 @@ class SampleRepository(object):
             for row in cursor.fetchall():
                 sample = Sample()
                 sample.hash_sha256 = row[0]
+                sample.build_timestamp = row[1]
                 ret.append(sample)
             return ret
 
@@ -86,3 +90,21 @@ class SampleRepository(object):
                 sample.sections.append(self.factory.create_section(*row))
 
             return sample
+
+    def newest(self, count):
+        with self.db.cursor() as cursor:
+            cursor.execute('''
+                SELECT s.hash_sha256, s.build_timestamp 
+                FROM sample s
+                LEFT JOIN sample_has_source x ON (s.id = x.sample_id)
+                WHERE (x.source_id IN %s)  
+                ORDER BY s.id DESC 
+                LIMIT %s
+            ''', (self.allowed_source_ids, count))
+            ret = []
+            for row in cursor.fetchall():
+                sample = Sample()
+                sample.hash_sha256 = row[0]
+                sample.build_timestamp = row[1]
+                ret.append(sample)
+            return ret
