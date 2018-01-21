@@ -54,6 +54,7 @@ class Sample(FrozenClass):
         self.tags = None  # type: list[str]
         self.file_names = None  # type: list[str]
 
+        self.processed_at = None # type DateTime
         self._freeze()
 
     def __repr__(self):
@@ -523,7 +524,8 @@ class JsonFactory(object):
                 }
 
                 d['functions'].append(json_func)
-
+        if sample.processed_at:
+            d['processed_at'] = sample.processed_at
         if self.filter:
             d = {k: v for k, v in d.items() if self.filter in k}
         return d
