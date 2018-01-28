@@ -129,5 +129,5 @@ class SampleRepository(object):
                     WHERE (sample_has_source.source_id IN %s)
                     LIMIT 1 OFFSET %s
                 ''', (self.allowed_source_ids, rand))
-                ret.append(cursor.fetchall()[0][0])
+                ret.append(cursor.fetchall()[0])
             return ret
