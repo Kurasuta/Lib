@@ -128,7 +128,7 @@ class SampleRepository(PostgresRepository):
                 # select output_count many samples without taking source into account (for performance reasons)
                 while len(ret) < output_count:
                     rand = random.randint(0, approximate_row_count)
-                    cursor.execute('SELECT id, hash_sha256, build_timestamp FROM sampleLIMIT 1 OFFSET %s', (rand,))
+                    cursor.execute('SELECT id, hash_sha256, build_timestamp FROM sample LIMIT 1 OFFSET %s', (rand,))
                     rows = cursor.fetchall()
                     if len(rows) == 0:
                         continue
