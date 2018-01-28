@@ -1,6 +1,6 @@
 from .sample import SampleFactory, Sample
 import random
-
+from datetime import datetime
 
 class PostgresRepository(object):
     def __init__(self, db):
@@ -121,6 +121,7 @@ class SampleRepository(PostgresRepository):
             return ret
 
     def random(self, output_count):
+        random.seed(datetime.new())
         with self.db.cursor() as cursor:
             approximate_row_count = self.approx_count('sample')
             ret = []
