@@ -129,5 +129,9 @@ class SampleRepository(object):
                     WHERE (sample_has_source.source_id IN %s)
                     LIMIT 1 OFFSET %s
                 ''', (self.allowed_source_ids, rand))
-                ret.append(cursor.fetchall()[0])
+                for row in cursor.fetchall():
+                    sample = Sample()
+                    sample.hash_sha256 = row[0]
+                    sample.build_timestamp = row[1]
+                    ret.append(sample)
             return ret
