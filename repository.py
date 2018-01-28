@@ -1,4 +1,5 @@
 from .sample import SampleFactory, Sample
+import random
 
 
 class SampleRepository(object):
@@ -107,4 +108,26 @@ class SampleRepository(object):
                 sample.hash_sha256 = row[0]
                 sample.build_timestamp = row[1]
                 ret.append(sample)
+            return ret
+
+    def random(self, output_count):
+        with self.db.cursor() as cursor:
+            cursor.execute('''
+                SELECT COUNT(id)
+                FROM sample
+                LEFT JOIN sample_has_source ON (sample.id = sample_has_source.sample_id)
+                WHERE (sample_has_source.source_id IN %s)
+            ''', (self.allowed_source_ids,))
+            row_count = cursor.fetchall()[0][0]
+            ret = []
+            for i in range(output_count):
+                rand = random.randint(0, row_count - 1)
+                cursor.execute('''
+                    SELECT hash_sha256, build_timestamp
+                    FROM sample
+                    LEFT JOIN sample_has_source ON (sample.id = sample_has_source.sample_id)
+                    WHERE (sample_has_source.source_id IN %s)
+                    LIMIT 1 OFFSET %s
+                ''', (self.allowed_source_ids, rand))
+                ret.append(cursor.fetchall()[0][0])
             return ret
