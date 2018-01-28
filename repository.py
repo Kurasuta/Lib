@@ -2,9 +2,19 @@ from .sample import SampleFactory, Sample
 import random
 
 
-class SampleRepository(object):
-    def __init__(self, db, allowed_source_identifiers):
+class PostgresRepository(object):
+    def __init__(self, db):
         self.db = db
+
+    def approx_count(self, table):
+        with self.db.cursor() as cursor:
+            cursor.execute('SELECT reltuples AS approximate_row_count FROM pg_class WHERE (relname = %s)', (table,))
+            return cursor.fetchall()[0][0]
+
+
+class SampleRepository(PostgresRepository):
+    def __init__(self, db, allowed_source_identifiers):
+        super().__init__(db)
         self.factory = SampleFactory()
 
         with self.db.cursor() as cursor:
@@ -112,16 +122,10 @@ class SampleRepository(object):
 
     def random(self, output_count):
         with self.db.cursor() as cursor:
-            cursor.execute('''
-                SELECT COUNT(id)
-                FROM sample
-                LEFT JOIN sample_has_source ON (sample.id = sample_has_source.sample_id)
-                WHERE (sample_has_source.source_id IN %s)
-            ''', (self.allowed_source_ids,))
-            row_count = cursor.fetchall()[0][0]
+            approximate_row_count = self.approx_count('sample')
             ret = []
-            for i in range(output_count):
-                rand = random.randint(0, row_count - 1)
+            while len(ret) < output_count:
+                rand = random.randint(0, approximate_row_count)
                 cursor.execute('''
                     SELECT hash_sha256, build_timestamp
                     FROM sample
@@ -129,9 +133,11 @@ class SampleRepository(object):
                     WHERE (sample_has_source.source_id IN %s)
                     LIMIT 1 OFFSET %s
                 ''', (self.allowed_source_ids, rand))
-                for row in cursor.fetchall():
-                    sample = Sample()
-                    sample.hash_sha256 = row[0]
-                    sample.build_timestamp = row[1]
-                    ret.append(sample)
+                rows = cursor.fetchall()
+                if len(rows) == 0:
+                    continue
+                sample = Sample()
+                sample.hash_sha256 = rows[0][0]
+                sample.build_timestamp = rows[0][1]
+                ret.append(sample)
             return ret
