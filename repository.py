@@ -125,19 +125,24 @@ class SampleRepository(PostgresRepository):
             approximate_row_count = self.approx_count('sample')
             ret = []
             while len(ret) < output_count:
-                rand = random.randint(0, approximate_row_count)
-                cursor.execute('''
-                    SELECT hash_sha256, build_timestamp
-                    FROM sample
-                    LEFT JOIN sample_has_source ON (sample.id = sample_has_source.sample_id)
-                    WHERE (sample_has_source.source_id IN %s)
-                    LIMIT 1 OFFSET %s
-                ''', (self.allowed_source_ids, rand))
-                rows = cursor.fetchall()
-                if len(rows) == 0:
-                    continue
-                sample = Sample()
-                sample.hash_sha256 = rows[0][0]
-                sample.build_timestamp = rows[0][1]
-                ret.append(sample)
+                # select output_count many samples without taking source into account (for performance reasons)
+                while len(ret) < output_count:
+                    rand = random.randint(0, approximate_row_count)
+                    cursor.execute('SELECT id, hash_sha256, build_timestamp FROM sampleLIMIT 1 OFFSET %s', (rand,))
+                    rows = cursor.fetchall()
+                    if len(rows) == 0:
+                        continue
+                    sample = Sample()
+                    sample.id = rows[0][0]
+                    sample.hash_sha256 = rows[0][1]
+                    sample.build_timestamp = rows[0][2]
+                    ret.append(sample)
+
+                # filter samples by source
+                cursor.execute(
+                    'SELECT sample_id, source_id FROM sample_has_source WHERE (smaple_id IN %s)',
+                    (tuple([sample.id for sample in ret]),)
+                )
+                allowed_sample_ids = [row[0] for row in cursor.fetchall() if row[1] in self.allowed_source_ids]
+                ret = [sample for sample in ret if sample.id in allowed_sample_ids]
             return ret

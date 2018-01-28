@@ -15,6 +15,7 @@ class FrozenClass(object):
 
 class Sample(FrozenClass):
     def __init__(self):
+        self.id = None  # type: int
         self.hash_sha256 = None  # type: str
         self.hash_md5 = None  # type: str
         self.hash_sha1 = None  # type: str
