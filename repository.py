@@ -140,7 +140,7 @@ class SampleRepository(PostgresRepository):
 
                 # filter samples by source
                 cursor.execute(
-                    'SELECT sample_id, source_id FROM sample_has_source WHERE (smaple_id IN %s)',
+                    'SELECT sample_id, source_id FROM sample_has_source WHERE (sample_id IN %s)',
                     (tuple([sample.id for sample in ret]),)
                 )
                 allowed_sample_ids = [row[0] for row in cursor.fetchall() if row[1] in self.allowed_source_ids]
