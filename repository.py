@@ -121,7 +121,7 @@ class SampleRepository(PostgresRepository):
             return ret
 
     def random(self, output_count):
-        random.seed(datetime.new())
+        random.seed(datetime.now())
         with self.db.cursor() as cursor:
             approximate_row_count = self.approx_count('sample')
             ret = []
