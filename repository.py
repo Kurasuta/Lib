@@ -2,6 +2,7 @@ from .sample import SampleFactory, Sample
 import random
 from datetime import datetime
 
+
 class PostgresRepository(object):
     def __init__(self, db):
         self.db = db
@@ -47,6 +48,15 @@ class SampleRepository(PostgresRepository):
             return ret
 
     def by_hash_sha256(self, sha256):
+        return self.by_hash_type('sha256', sha256)
+
+    def by_hash_md5(self, md5):
+        return self.by_hash_type('md5', md5)
+
+    def by_hash_sha1(self, sha1):
+        return self.by_hash_type('sha1', sha1)
+
+    def by_hash_type(self, hash_type, sha256):
         with self.db.cursor() as cursor:
             cursor.execute('''
                 SELECT
@@ -69,8 +79,8 @@ class SampleRepository(PostgresRepository):
                     sample.strings_count
                 FROM sample
                 LEFT JOIN sample_has_source ON (sample.id = sample_has_source.sample_id)
-                WHERE (sample.hash_sha256 = %s) AND (sample_has_source.source_id IN %s)
-            ''', (sha256, self.allowed_source_ids))
+                WHERE (sample.hash_%s = %%s) AND (sample_has_source.source_id IN %%s)
+            ''' % hash_type, (sha256, self.allowed_source_ids))
 
             # TODO join more tables and propagate to sample object
 
