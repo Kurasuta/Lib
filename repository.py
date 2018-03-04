@@ -158,6 +158,36 @@ class SampleRepository(PostgresRepository):
                 ret += [sample for sample in ret if sample.id in allowed_sample_ids]
             return ret[:output_count]
 
+    def random_by_id(self, output_count):
+        random.seed(datetime.now())
+        with self.db.cursor as cursor:
+            cursor.execute('SELECT MIN(id), MAX(id) FROM sample')
+            min_id, max_id = cursor.fetchall()[0]
+            ret = []
+            random_ids = []
+            while len(random_ids) < output_count:
+                # get random ids and filter by source
+                random_potential_ids = random.sample(range(min_id, max_id), output_count)
+                cursor.execute(
+                    'SELECT sample_id, source_id FROM sample_has_source WHERE (sample_id IN %s)',
+                    (tuple(random_potential_ids),)
+                )
+                random_ids += [row[0] for row in cursor.fetchall() if row[1] in self.allowed_source_ids]
+
+            # all random Ids exist and are allowed at this point
+            cursor.execute(
+                'SELECT id, hash_sha256, build_timestamp FROM sample WHERE (id IN %s)',
+                (tuple(random_ids, ))
+            )
+            for row in cursor.fetchall():
+                sample = Sample()
+                sample.id = row[0]
+                sample.hash_sha256 = row[1]
+                sample.build_timestamp = row[2]
+                ret.append(sample)
+
+            return ret[:output_count]
+
 
 class ApiKeyRepository(PostgresRepository):
     def exists(self, api_key):
