@@ -157,3 +157,10 @@ class SampleRepository(PostgresRepository):
                 allowed_sample_ids = [row[0] for row in cursor.fetchall() if row[1] in self.allowed_source_ids]
                 ret = [sample for sample in ret if sample.id in allowed_sample_ids]
             return ret
+
+
+class ApiKeyRepository(PostgresRepository):
+    def exists(self, api_key):
+        with self.db.cursor() as cursor:
+            cursor.execute('SELECT id FROM api_key WHERE (content = %s)', (api_key,))
+            return len(cursor.fetchall()) == 1
