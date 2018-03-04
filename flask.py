@@ -32,13 +32,13 @@ def validate_api_key(key):
         raise InvalidUsage('Invalid API key format')
     if len(s[0]) != 8:
         raise InvalidUsage('Invalid API key format')
-    if len(s[0]) != 4:
+    if len(s[1]) != 4:
         raise InvalidUsage('Invalid API key format')
-    if len(s[0]) != 4:
+    if len(s[2]) != 4:
         raise InvalidUsage('Invalid API key format')
-    if len(s[0]) != 4:
+    if len(s[3]) != 4:
         raise InvalidUsage('Invalid API key format')
-    if len(s[0]) != 12:
+    if len(s[4]) != 12:
         raise InvalidUsage('Invalid API key format')
     for c in key:
         if c in string.hexdigits:
