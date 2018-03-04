@@ -130,7 +130,7 @@ class SampleRepository(PostgresRepository):
                 ret.append(sample)
             return ret
 
-    def random(self, output_count):
+    def random_by_offset(self, output_count):
         random.seed(datetime.now())
         with self.db.cursor() as cursor:
             approximate_row_count = self.approx_count('sample')
@@ -155,8 +155,8 @@ class SampleRepository(PostgresRepository):
                     (tuple([sample.id for sample in ret]),)
                 )
                 allowed_sample_ids = [row[0] for row in cursor.fetchall() if row[1] in self.allowed_source_ids]
-                ret = [sample for sample in ret if sample.id in allowed_sample_ids]
-            return ret
+                ret += [sample for sample in ret if sample.id in allowed_sample_ids]
+            return ret[:output_count]
 
 
 class ApiKeyRepository(PostgresRepository):
