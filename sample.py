@@ -55,7 +55,7 @@ class Sample(FrozenClass):
         self.tags = None  # type: list[str]
         self.file_names = None  # type: list[str]
 
-        self.processed_at = None # type DateTime
+        self.processed_at = None  # type DateTime
         self._freeze()
 
     def __repr__(self):
@@ -402,6 +402,12 @@ class SampleFactory(object):
         if 'file_names' in d.keys():
             sample.file_names = d['file_names']
 
+        return sample
+
+    def from_row(self, row, field_names):
+        sample = Sample()
+        for i, field_name in enumerate(field_names):
+            setattr(sample, field_name, row[i])
         return sample
 
 

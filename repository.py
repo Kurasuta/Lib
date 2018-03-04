@@ -140,14 +140,10 @@ class SampleRepository(PostgresRepository):
                 while len(ret) < output_count:
                     rand = random.randint(0, approximate_row_count)
                     cursor.execute('SELECT id, hash_sha256, build_timestamp FROM sample LIMIT 1 OFFSET %s', (rand,))
-                    rows = cursor.fetchall()
-                    if len(rows) == 0:
-                        continue
-                    sample = Sample()
-                    sample.id = rows[0][0]
-                    sample.hash_sha256 = rows[0][1]
-                    sample.build_timestamp = rows[0][2]
-                    ret.append(sample)
+                    ret += [
+                        self.factory.from_row(row, ['id, hash_sha256, build_timestamp'])
+                        for row in cursor.fetchall()
+                    ]
 
                 # filter samples by source
                 cursor.execute(
@@ -163,7 +159,6 @@ class SampleRepository(PostgresRepository):
         with self.db.cursor() as cursor:
             cursor.execute('SELECT MIN(id), MAX(id) FROM sample')
             min_id, max_id = cursor.fetchall()[0]
-            ret = []
             random_ids = []
             while len(random_ids) < output_count:
                 # get random ids and filter by source
@@ -177,16 +172,13 @@ class SampleRepository(PostgresRepository):
             # all random Ids exist and are allowed at this point
             cursor.execute(
                 'SELECT id, hash_sha256, build_timestamp FROM sample WHERE (id IN %s)',
-                (tuple(random_ids[:output_count]), )
+                (tuple(random_ids[:output_count]),)
             )
-            for row in cursor.fetchall():
-                sample = Sample()
-                sample.id = row[0]
-                sample.hash_sha256 = row[1]
-                sample.build_timestamp = row[2]
-                ret.append(sample)
 
-            return ret
+            return [
+                self.factory.from_row(row, ['id, hash_sha256, build_timestamp'])
+                for row in cursor.fetchall()
+            ]
 
 
 class ApiKeyRepository(PostgresRepository):
