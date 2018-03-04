@@ -141,7 +141,7 @@ class SampleRepository(PostgresRepository):
                     rand = random.randint(0, approximate_row_count)
                     cursor.execute('SELECT id, hash_sha256, build_timestamp FROM sample LIMIT 1 OFFSET %s', (rand,))
                     ret += [
-                        self.factory.from_row(row, ['id, hash_sha256, build_timestamp'])
+                        self.factory.from_row(row, ['id', 'hash_sha256', 'build_timestamp'])
                         for row in cursor.fetchall()
                     ]
 
@@ -176,7 +176,7 @@ class SampleRepository(PostgresRepository):
             )
 
             return [
-                self.factory.from_row(row, ['id, hash_sha256, build_timestamp'])
+                self.factory.from_row(row, ['id', 'hash_sha256', 'build_timestamp'])
                 for row in cursor.fetchall()
             ]
 
