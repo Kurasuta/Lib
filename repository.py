@@ -160,7 +160,7 @@ class SampleRepository(PostgresRepository):
 
     def random_by_id(self, output_count):
         random.seed(datetime.now())
-        with self.db.cursor as cursor:
+        with self.db.cursor() as cursor:
             cursor.execute('SELECT MIN(id), MAX(id) FROM sample')
             min_id, max_id = cursor.fetchall()[0]
             ret = []
@@ -177,7 +177,7 @@ class SampleRepository(PostgresRepository):
             # all random Ids exist and are allowed at this point
             cursor.execute(
                 'SELECT id, hash_sha256, build_timestamp FROM sample WHERE (id IN %s)',
-                (tuple(random_ids, ))
+                (tuple(random_ids[:output_count], ))
             )
             for row in cursor.fetchall():
                 sample = Sample()
@@ -186,7 +186,7 @@ class SampleRepository(PostgresRepository):
                 sample.build_timestamp = row[2]
                 ret.append(sample)
 
-            return ret[:output_count]
+            return ret
 
 
 class ApiKeyRepository(PostgresRepository):
