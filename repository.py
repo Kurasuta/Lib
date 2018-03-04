@@ -177,7 +177,7 @@ class SampleRepository(PostgresRepository):
             # all random Ids exist and are allowed at this point
             cursor.execute(
                 'SELECT id, hash_sha256, build_timestamp FROM sample WHERE (id IN %s)',
-                (tuple(random_ids[:output_count], ))
+                (tuple(random_ids[:output_count]), )
             )
             for row in cursor.fetchall():
                 sample = Sample()
