@@ -168,6 +168,7 @@ class SampleRepository(PostgresRepository):
                     (tuple(random_potential_ids),)
                 )
                 random_ids += [row[0] for row in cursor.fetchall() if row[1] in self.allowed_source_ids]
+                random_ids = list(set(random_ids))
 
             # all random Ids exist and are allowed at this point
             cursor.execute(
