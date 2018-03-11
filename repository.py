@@ -10,7 +10,7 @@ class PostgresRepository(object):
     def approx_count(self, table):
         with self.db.cursor() as cursor:
             cursor.execute('SELECT reltuples AS approximate_row_count FROM pg_class WHERE (relname = %s)', (table,))
-            return cursor.fetchall()[0][0]
+            return int(cursor.fetchall()[0][0])
 
 
 class SampleRepository(PostgresRepository):
