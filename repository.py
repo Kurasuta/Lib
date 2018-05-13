@@ -14,21 +14,174 @@ class PostgresRepository(object):
 
 
 class SampleRepository(PostgresRepository):
-    def __init__(self, db, allowed_source_identifiers):
+    def __init__(self, db):
         super().__init__(db)
         self.factory = SampleFactory()
 
+    def by_ids(self, ids):
+        ids = tuple(ids)
+
+        # read base samples
+        samples = {}
         with self.db.cursor() as cursor:
-            cursor.execute(
-                'SELECT id, identifier FROM sample_source WHERE (identifier IN %s)',
-                (tuple(allowed_source_identifiers),)
-            )
-            result = [(int(row[0]), row[1]) for row in cursor.fetchall()]
-            self.allowed_source_ids = tuple([row[0] for row in result])
-            if len(self.allowed_source_ids) != len(allowed_source_identifiers):
-                raise Exception(
-                    'Found %s when queried for source identifiers %s' % (result, allowed_source_identifiers)
+            histogram_sql = ', '.join(['byte_histogram.byte_%02x' % i for i in range(256)])
+            cursor.execute('''
+                SELECT
+                    sample.id,
+                    sample.hash_sha256,
+                    sample.hash_md5,
+                    sample.hash_sha1,
+                    sample.size,
+                    sample.ssdeep,
+                    sample.imphash,
+                    sample.entropy,
+                    sample.file_size,
+                    sample.entry_point,
+                    sample.overlay_sha256,
+                    sample.overlay_size,
+                    sample.overlay_ssdeep,
+                    sample.overlay_entropy,
+                    sample.build_timestamp,
+                    sample.strings_count_of_length_at_least_10,
+                    sample.strings_count,
+                    sample.first_kb,
+                    magic.description,
+                    export_name.content,
+                    %s
+                FROM sample
+                LEFT JOIN magic ON (sample.magic_id = magic.id)
+                LEFT JOIN export_name ON (sample.magic_id = export_name.id)
+                LEFT JOIN byte_histogram ON (byte_histogram.id = sample.code_histogram_id)
+                WHERE (sample.id IN %%s)
+            ''' % histogram_sql, (ids,))
+            for row in cursor.fetchall():
+                sample = self.factory.from_row(
+                    row,
+                    [
+                        'id',
+                        'hash_sha256',
+                        'hash_md5',
+                        'hash_sha1',
+                        'size',
+                        'ssdeep',
+                        'imphash',
+                        'entropy',
+                        'file_size',
+                        'entry_point',
+                        'overlay_sha256',
+                        'overlay_size',
+                        'overlay_ssdeep',
+                        'overlay_entropy',
+                        'build_timestamp',
+                        'strings_count_of_length_at_least_10',
+                        'strings_count'
+                    ]
                 )
+                # sample.first_kb = row[17] TODO
+                sample.magic = row[18]
+                sample.export_name = row[19]
+                samples[row[0]] = sample
+                # TODO byte_histogram
+
+            # read debug directories
+            cursor.execute('''
+                SELECT
+                    debug_directory.timestamp,
+                    path.content,
+                    debug_directory.age,
+                    debug_directory.signature,
+                    debug_directory.guid,
+                    debug_directory.sample_id
+                FROM debug_directory
+                LEFT JOIN path ON (path.id = debug_directory.path_id)
+                WHERE (sample_id IN %s)
+            ''', (ids,))
+            for row in cursor.fetchall():
+                if samples[row[5]].debug_directories is None:
+                    samples[row[5]].debug_directories = []
+                samples[row[5]].debug_directories.append(self.factory.create_debug_directory(*row[0:5]))
+
+            # read export symbols
+            cursor.execute('''
+                SELECT
+                    export_symbol.address,
+                    export_symbol_name.content,
+                    export_symbol.ordinal,
+                    export_symbol.sample_id
+                FROM export_symbol
+                LEFT JOIN export_symbol_name ON (export_symbol.name_id = export_symbol_name.id)
+                WHERE (sample_id IN %s)
+            ''', (ids,))
+            for row in cursor.fetchall():
+                if samples[row[3]].exports is None:
+                    samples[row[3]].exports = []
+                samples[row[3]].exports.append(self.factory.create_export(*row[0:3]))
+
+            # read imports
+            cursor.execute('''
+                SELECT
+                    dll_name.content,
+                    import.address,
+                    import_name.content,
+                    import.sample_id
+                FROM import
+                LEFT JOIN dll_name ON (dll_name.id = import.dll_name_id)
+                LEFT JOIN import_name ON (import_name.id = import.name_id)
+                WHERE (sample_id IN %s)
+            ''', (ids,))
+            for row in cursor.fetchall():
+                if samples[row[3]].imports is None:
+                    samples[row[3]].imports = []
+                samples[row[3]].imports.append(self.factory.create_import(*row[0:3]))
+
+            # read resources
+            cursor.execute('''
+                SELECT
+                    resource.hash_sha256,
+                    resource.offset,
+                    resource.size,
+                    resource.actual_size,
+                    resource.entropy,
+                    resource.ssdeep,
+                    resource_type_pair.content_id,
+                    resource_type_pair.content_str,
+                    resource_name_pair.content_id,
+                    resource_name_pair.content_str,
+                    resource_language_pair.content_id,
+                    resource_language_pair.content_str,
+                    resource.sample_id
+                FROM resource
+                LEFT JOIN resource_type_pair ON (resource_type_pair.id = resource.type_pair_id)
+                LEFT JOIN resource_name_pair ON (resource_name_pair.id = resource.name_pair_id)
+                LEFT JOIN resource_language_pair ON (resource_language_pair.id = resource.language_pair_id)
+                WHERE (resource.sample_id IN %s)
+                ORDER BY resource.sort_order
+            ''', (ids,))
+            for row in cursor.fetchall():
+                if samples[row[12]].resources is None:
+                    samples[row[12]].resources = []
+                samples[row[12]].resources.append(self.factory.create_resource(*row[0:12]))
+
+            # read sections
+            cursor.execute('''
+                SELECT
+                    section.hash_sha256,
+                    section_name.content,
+                    section.virtual_address,
+                    section.virtual_size,
+                    section.raw_size,
+                    section.entropy,
+                    section.ssdeep,
+                    section.sample_id
+                FROM section
+                LEFT JOIN section_name ON (section_name.id = section.name_id)
+                WHERE (section.sample_id IN %s)
+            ''', (ids,))
+            for row in cursor.fetchall():
+                if samples[row[7]].sections is None:
+                    samples[row[7]].sections = []
+                samples[row[7]].sections.append(self.factory.create_section(*row[0:7]))
+        return [sample for sample in samples.values()]
 
     def by_section_hash(self, sha256):
         with self.db.cursor() as cursor:
@@ -36,9 +189,8 @@ class SampleRepository(PostgresRepository):
                 SELECT sample.hash_sha256, sample.build_timestamp
                 FROM section
                 LEFT JOIN sample ON (sample.id = section.sample_id)
-                LEFT JOIN sample_has_source ON (sample.id = sample_has_source.sample_id)
-                WHERE (section.hash_sha256 = %s) AND (sample_has_source.source_id in %s)
-            ''', (sha256, self.allowed_source_ids))
+                WHERE (section.hash_sha256 = %s)
+            ''', (sha256,))
             ret = []
             for row in cursor.fetchall():
                 sample = Sample()
@@ -78,9 +230,8 @@ class SampleRepository(PostgresRepository):
                     sample.strings_count_of_length_at_least_10,
                     sample.strings_count
                 FROM sample
-                LEFT JOIN sample_has_source ON (sample.id = sample_has_source.sample_id)
-                WHERE (sample.hash_%s = %%s) AND (sample_has_source.source_id IN %%s)
-            ''' % hash_type, (sha256, self.allowed_source_ids))
+                WHERE (sample.hash_%s = %%s)
+            ''' % hash_type, (sha256,))
 
             # TODO join more tables and propagate to sample object
 
@@ -117,11 +268,9 @@ class SampleRepository(PostgresRepository):
             cursor.execute('''
                 SELECT s.hash_sha256, s.build_timestamp 
                 FROM sample s
-                LEFT JOIN sample_has_source x ON (s.id = x.sample_id)
-                WHERE (x.source_id IN %s)  
                 ORDER BY s.id DESC 
                 LIMIT %s
-            ''', (self.allowed_source_ids, count))
+            ''', (count,))
             ret = []
             for row in cursor.fetchall():
                 sample = Sample()
@@ -136,22 +285,13 @@ class SampleRepository(PostgresRepository):
             approximate_row_count = self.approx_count('sample')
             ret = []
             while len(ret) < output_count:
-                # select output_count many samples without taking source into account (for performance reasons)
-                while len(ret) < output_count:
-                    rand = random.randint(0, approximate_row_count)
-                    cursor.execute('SELECT id, hash_sha256, build_timestamp FROM sample LIMIT 1 OFFSET %s', (rand,))
-                    ret += [
-                        self.factory.from_row(row, ['id', 'hash_sha256', 'build_timestamp'])
-                        for row in cursor.fetchall()
-                    ]
+                rand = random.randint(0, approximate_row_count)
+                cursor.execute('SELECT id, hash_sha256, build_timestamp FROM sample LIMIT 1 OFFSET %s', (rand,))
+                ret += [
+                    self.factory.from_row(row, ['id', 'hash_sha256', 'build_timestamp'])
+                    for row in cursor.fetchall()
+                ]
 
-                # filter samples by source
-                cursor.execute(
-                    'SELECT sample_id, source_id FROM sample_has_source WHERE (sample_id IN %s)',
-                    (tuple([sample.id for sample in ret]),)
-                )
-                allowed_sample_ids = [row[0] for row in cursor.fetchall() if row[1] in self.allowed_source_ids]
-                ret += [sample for sample in ret if sample.id in allowed_sample_ids]
             return ret[:output_count]
 
     def random_by_id(self, output_count):
@@ -161,16 +301,11 @@ class SampleRepository(PostgresRepository):
             min_id, max_id = cursor.fetchall()[0]
             random_ids = []
             while len(random_ids) < output_count:
-                # get random ids and filter by source
                 random_potential_ids = random.sample(range(min_id, max_id), output_count)
-                cursor.execute(
-                    'SELECT sample_id, source_id FROM sample_has_source WHERE (sample_id IN %s)',
-                    (tuple(random_potential_ids),)
-                )
-                random_ids += [row[0] for row in cursor.fetchall() if row[1] in self.allowed_source_ids]
+                cursor.execute('SELECT id FROM sample WHERE (id IN %s)', (tuple(random_potential_ids),))
+                random_ids += [row[0] for row in cursor.fetchall()]
                 random_ids = list(set(random_ids))
 
-            # all random Ids exist and are allowed at this point
             cursor.execute(
                 'SELECT id, hash_sha256, build_timestamp FROM sample WHERE (id IN %s)',
                 (tuple(random_ids[:output_count]),)
