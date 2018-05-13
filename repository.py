@@ -316,6 +316,35 @@ class SampleRepository(PostgresRepository):
                 for row in cursor.fetchall()
             ]
 
+    def ids_by_hashes(self, hashes):
+        sha256 = []
+        md5 = []
+        sha1 = []
+        for line in hashes:
+            hash = line.strip().decode('utf-8')
+            if len(hash) == 64:
+                sha256.append(hash)
+            elif len(hash) == 32:
+                md5.append(hash)
+            elif len(hash) == 40:
+                sha1.append(hash)
+        where = []
+        args = []
+        if sha256:
+            where.append('(hash_sha256 IN %s)')
+            args.append(tuple(sha256))
+        if md5:
+            where.append('(hash_md5 IN %s)')
+            args.append(tuple(md5))
+        if sha1:
+            where.append('(hash_sha1 IN %s)')
+            args.append(tuple(sha1))
+
+        with self.db.cursor() as cursor:
+            cursor.execute('SELECT sample.id FROM sample WHERE (%s)' % (' OR '.join(where)), args)
+            ids = [row[0] for row in cursor]
+        return ids
+
 
 class ApiKeyRepository(PostgresRepository):
     def exists(self, api_key):
