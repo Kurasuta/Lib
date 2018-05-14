@@ -417,6 +417,7 @@ class JsonFactory(object):
 
     def from_sample(self, sample):
         d = {}
+        if sample.id is not None: d['id'] = sample.id
         if sample.hash_sha256 is not None: d['hash_sha256'] = sample.hash_sha256
         if sample.hash_md5 is not None: d['hash_md5'] = sample.hash_md5
         if sample.hash_sha1 is not None: d['hash_sha1'] = sample.hash_sha1
