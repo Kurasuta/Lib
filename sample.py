@@ -443,7 +443,7 @@ class JsonFactory(object):
         if sample.debug_directories:
             d['debug_directories'] = [
                 {
-                    'timestamp': debug_directory.timestamp,
+                    'timestamp': '%s UTC' % debug_directory.timestamp,
                     'path': debug_directory.path,
                     'age': debug_directory.age,
                     'signature': debug_directory.signature,
