@@ -188,7 +188,7 @@ class SampleRepository(PostgresRepository):
                     sample_has_heuristic_ioc.sample_id,
                     ioc.content
                 FROM ioc
-                LEFT JOIN sample_has_heuristic_ioc ON (sample_has_heuristic_ioc.ioc_id = i.id)
+                LEFT JOIN sample_has_heuristic_ioc ON (sample_has_heuristic_ioc.ioc_id = ioc.id)
                 WHERE (sample_has_heuristic_ioc.sample_id IN %s)
             ''', (ids,))
             for row in cursor.fetchall():
