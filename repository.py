@@ -77,11 +77,11 @@ class SampleRepository(PostgresRepository):
                         'strings_count'
                     ]
                 )
-                # sample.first_kb = row[17] TODO
+                sample.first_kb = row[17]
                 sample.magic = row[18]
                 sample.export_name = row[19]
+                sample.code_histogram = dict(('%i' % i, row[20 + i]) for i in range(256))
                 samples[row[0]] = sample
-                # TODO byte_histogram
 
             # read debug directories
             cursor.execute('''

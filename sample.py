@@ -453,7 +453,9 @@ class JsonFactory(object):
         if sample.hash_md5 is not None: d['hash_md5'] = sample.hash_md5
         if sample.hash_sha1 is not None: d['hash_sha1'] = sample.hash_sha1
         if sample.size is not None: d['size'] = sample.size
-        if sample.code_histogram is not None: d['code_histogram'] = sample.code_histogram
+        if sample.code_histogram is not None: d['code_histogram'] = dict(
+            (key, value.encode('hex')) for key, value in sample.code_histogram.items()
+        )
         if sample.magic is not None: d['magic'] = sample.magic
         if sample.peyd is not None: d['peyd'] = sample.peyd
 
@@ -463,7 +465,7 @@ class JsonFactory(object):
 
         if sample.file_size is not None: d['file_size'] = sample.file_size
         if sample.entry_point is not None: d['entry_point'] = sample.entry_point
-        if sample.first_kb is not None: d['first_kb'] = sample.first_kb
+        if sample.first_kb is not None: d['first_kb'] = sample.first_kb.encode('hex')
 
         if sample.overlay_sha256 is not None: d['overlay_sha256'] = sample.overlay_sha256
         if sample.overlay_size is not None: d['overlay_size'] = sample.overlay_size
