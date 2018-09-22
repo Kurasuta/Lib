@@ -463,7 +463,7 @@ class JsonFactory(object):
 
         if sample.file_size is not None: d['file_size'] = sample.file_size
         if sample.entry_point is not None: d['entry_point'] = sample.entry_point
-        if sample.first_kb is not None: d['first_kb'] = str(sample.first_kb).encode('hex')
+        if sample.first_kb is not None: d['first_kb'] = bytes(sample.first_kb).hex()
 
         if sample.overlay_sha256 is not None: d['overlay_sha256'] = sample.overlay_sha256
         if sample.overlay_size is not None: d['overlay_size'] = sample.overlay_size
