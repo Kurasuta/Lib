@@ -154,8 +154,8 @@ class SampleRepository(PostgresRepository):
                 LEFT JOIN resource_type_pair ON (resource_type_pair.id = resource.type_pair_id)
                 LEFT JOIN resource_name_pair ON (resource_name_pair.id = resource.name_pair_id)
                 LEFT JOIN resource_language_pair ON (resource_language_pair.id = resource.language_pair_id)
-                WHERE (resource.sample_id IN %s)
                 ORDER BY resource.sort_order
+                WHERE (resource.sample_id IN %s)
             ''', (ids,))
             for row in cursor.fetchall():
                 if samples[row[12]].resources is None:
