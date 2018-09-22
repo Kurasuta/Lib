@@ -294,7 +294,7 @@ class SampleRepository(PostgresRepository):
                     d.guid
                 FROM debug_directory d
                 LEFT JOIN path p ON (d.path_id = p.id)
-                WHERE (r.sample_id = %s)
+                WHERE (d.sample_id = %s)
             ''', (sample_id,))
             for row in cursor.fetchall():
                 sample.debug_directories(self.factory.create_debug_directory(*row))
