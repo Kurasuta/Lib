@@ -281,9 +281,23 @@ class SampleRepository(PostgresRepository):
                 LEFT JOIN resource_language_pair lp ON (r.language_pair_id = tp.id)
                 WHERE (r.sample_id = %s)
                 ORDER BY r.sort_order
-            ''', (sample_id, ))
+            ''', (sample_id,))
             for row in cursor.fetchall():
                 sample.resources.append(self.factory.create_resource(*row))
+
+            cursor.execute('''
+                SELECT
+                    d.timestamp,
+                    p.content AS path,
+                    d.age,
+                    d.signature,
+                    d.guid
+                FROM debug_directory d
+                LEFT JOIN path p ON (d.path_id = p.id)
+                WHERE (r.sample_id = %s)
+            ''', (sample_id,))
+            for row in cursor.fetchall():
+                sample.debug_directories(self.factory.create_debug_directory(*row))
 
             return sample
 
