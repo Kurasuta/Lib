@@ -453,9 +453,7 @@ class JsonFactory(object):
         if sample.hash_md5 is not None: d['hash_md5'] = sample.hash_md5
         if sample.hash_sha1 is not None: d['hash_sha1'] = sample.hash_sha1
         if sample.size is not None: d['size'] = sample.size
-        if sample.code_histogram is not None: d['code_histogram'] = dict(
-            (key, value.encode('hex')) for key, value in sample.code_histogram.items()
-        )
+        if sample.code_histogram is not None: d['code_histogram'] = sample.code_histogram.items()
         if sample.magic is not None: d['magic'] = sample.magic
         if sample.peyd is not None: d['peyd'] = sample.peyd
 
