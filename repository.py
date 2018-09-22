@@ -154,8 +154,8 @@ class SampleRepository(PostgresRepository):
                 LEFT JOIN resource_type_pair ON (resource_type_pair.id = resource.type_pair_id)
                 LEFT JOIN resource_name_pair ON (resource_name_pair.id = resource.name_pair_id)
                 LEFT JOIN resource_language_pair ON (resource_language_pair.id = resource.language_pair_id)
-                ORDER BY resource.sort_order
                 WHERE (resource.sample_id IN %s)
+                ORDER BY resource.sort_order
             ''', (ids,))
             for row in cursor.fetchall():
                 if samples[row[12]].resources is None:
@@ -279,8 +279,8 @@ class SampleRepository(PostgresRepository):
                 LEFT JOIN resource_type_pair tp ON (r.type_pair_id = tp.id)
                 LEFT JOIN resource_name_pair np ON (r.name_pair_id = tp.id)
                 LEFT JOIN resource_language_pair lp ON (r.language_pair_id = tp.id)
-                ORDER BY r.sort_order
                 WHERE (r.sample_id = %s)
+                ORDER BY r.sort_order
             ''', (sample_id, ))
             for row in cursor.fetchall():
                 sample.resources.append(self.factory.create_resource(*row))
