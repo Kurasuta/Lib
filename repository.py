@@ -181,6 +181,21 @@ class SampleRepository(PostgresRepository):
                 if samples[row[7]].sections is None:
                     samples[row[7]].sections = []
                 samples[row[7]].sections.append(self.factory.create_section(*row[0:7]))
+
+            # read heuristic IOCs
+            cursor.execute('''
+                SELECT
+                    sample_has_heuristic_ioc.sample_id,
+                    ioc.content
+                FROM ioc
+                LEFT JOIN sample_has_heuristic_ioc ON (sample_has_heuristic_ioc.ioc_id = i.id)
+                WHERE (sample_has_heuristic_ioc.sample_id IN %s)
+            ''', (ids,))
+            for row in cursor.fetchall():
+                if samples[row[0]].heuristic_iocs is None:
+                    samples[row[0]].heuristic_iocs = []
+                samples[row[0]].heuristic_iocs.append(row[1])
+
         return [sample for sample in samples.values()]
 
     def by_section_hash(self, sha256):
