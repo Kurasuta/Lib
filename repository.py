@@ -297,7 +297,7 @@ class SampleRepository(PostgresRepository):
                 WHERE (d.sample_id = %s)
             ''', (sample_id,))
             for row in cursor.fetchall():
-                sample.debug_directories(self.factory.create_debug_directory(*row))
+                sample.debug_directories.append(self.factory.create_debug_directory(*row))
 
             return sample
 
