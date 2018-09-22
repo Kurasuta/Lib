@@ -36,7 +36,7 @@ class Sample(FrozenClass):
         self.overlay_entropy = None  # type: float
         self.build_timestamp = None
 
-        self.debug_directories = None  # type: list[SampleDebugDirectory]
+        self.debug_directories = []  # type: list[SampleDebugDirectory]
         self.export_name = None  # type: str
         self.exports = None  # type: list[SampleExport]
         self.imports = None  # type: list[SampleImport]
