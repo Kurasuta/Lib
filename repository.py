@@ -261,6 +261,30 @@ class SampleRepository(PostgresRepository):
             for row in cursor.fetchall():
                 sample.sections.append(self.factory.create_section(*row))
 
+            cursor.execute('''
+                SELECT
+                    r.hash_sha256,
+                    r.offset,
+                    r.size,
+                    r.actual_size,
+                    r.ssdeep,
+                    r.entropy,
+                    tp.content_id AS type_id,
+                    tp.content_str AS type_str,
+                    np.content_id AS name_id,
+                    np.content_str AS name_str,
+                    lp.content_id AS language_id,
+                    lp.content_str AS language_str
+                FROM resource r
+                LEFT JOIN resource_type_pair tp ON (r.type_pair_id = tp.id)
+                LEFT JOIN resource_name_pair np ON (r.name_pair_id = tp.id)
+                LEFT JOIN resource_language_pair lp ON (r.language_pair_id = tp.id)
+                ORDER BY r.sort_order
+                WHERE (r.sample_id = %s)
+            ''', (sample_id, ))
+            for row in cursor.fetchall():
+                sample.resources.append(self.factory.create_resource(*row))
+
             return sample
 
     def newest(self, count):

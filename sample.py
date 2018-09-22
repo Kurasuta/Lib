@@ -415,6 +415,37 @@ class JsonFactory(object):
     def __init__(self, filter=None):
         self.filter = filter
 
+    @staticmethod
+    def from_section(section):
+        return {
+            'hash_sha256': section.hash_sha256,
+            'virtual_address': section.virtual_address,
+            'virtual_size': section.virtual_size,
+            'raw_size': section.raw_size,
+            'name': section.name,
+            'entropy': section.entropy,
+            'ssdeep': section.ssdeep,
+        }
+
+    @staticmethod
+    def from_resource(resource):
+        ret = {
+            'hash_sha256': resource.hash_sha256,
+            'offset': resource.offset,
+            'size': resource.size,
+            'actual_size': resource.actual_size,
+            'ssdeep': resource.ssdeep,
+            'entropy': resource.entropy,
+        }
+        if resource.type_id: ret['type_id'] = resource.type_id
+        if resource.type_str: ret['type_str'] = '%s' % resource.type_str
+        if resource.name_id: ret['name_id'] = resource.name_id
+        if resource.name_str: ret['name_str'] = '%s' % resource.name_str
+        if resource.language_id: ret['language_id'] = resource.language_id
+        if resource.language_str: ret['language_str'] = '%s' % resource.language_str
+
+        return ret
+
     def from_sample(self, sample):
         d = {}
         if sample.id is not None: d['id'] = sample.id
@@ -470,40 +501,10 @@ class JsonFactory(object):
             ]
 
         if sample.sections:
-            d['sections'] = [
-                {
-                    'hash_sha256': section.hash_sha256,
-                    'name': section.name,
-                    'virtual_address': section.virtual_address,
-                    'virtual_size': section.virtual_size,
-                    'raw_size': section.raw_size,
-                    'entropy': section.entropy,
-                    'ssdeep': section.ssdeep,
-                } for section in sample.sections
-            ]
+            d['sections'] = [self.from_section(section) for section in sample.sections]
 
         if sample.resources:
-            d['resources'] = []
-            for sample_resource in sample.resources:
-                json_resource = {
-                    'hash_sha256': sample_resource.hash_sha256,
-                    'offset': sample_resource.offset,
-                    'size': sample_resource.size,
-                    'actual_size': sample_resource.actual_size,
-                    'ssdeep': sample_resource.ssdeep,
-                    'entropy': sample_resource.entropy,
-                }
-                if sample_resource.type_id: json_resource['type_id'] = sample_resource.type_id
-                if sample_resource.type_str: json_resource['type_str'] = \
-                    '%s' % self._format_pefile_unicode_wrapper(sample_resource.type_str)
-                if sample_resource.name_id: json_resource['name_id'] = sample_resource.name_id
-                if sample_resource.name_str: json_resource['name_str'] = \
-                    '%s' % self._format_pefile_unicode_wrapper(sample_resource.name_str)
-                if sample_resource.language_id: json_resource['language_id'] = sample_resource.language_id
-                if sample_resource.language_str: json_resource['language_str'] = \
-                    '%s' % self._format_pefile_unicode_wrapper(sample_resource.language_str)
-
-                d['resources'].append(json_resource)
+            d['resources'] = [self.from_resource(sample_resource) for sample_resource in sample.resources]
 
         if sample.functions:
             d['functions'] = []
